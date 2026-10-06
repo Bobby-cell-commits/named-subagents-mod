@@ -1,0 +1,28 @@
+name: CI
+
+# The node checks: the generated pool matches registry.json, and the draw logic passes its
+# tests. `claude plugin test .` and `claude plugin validate .` need a local Claude Code and
+# are not run here.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    name: Pool is current + draw-logic tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22" # 22.18+ runs .ts files directly (type stripping)
+      - run: node --version
+      - name: hooks/pool.ts matches registry.json
+        run: node scripts/gen_pool.mjs --check
+      - name: Draw-logic tests
+        run: node --test spec/*.spec.ts
