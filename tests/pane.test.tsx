@@ -31,7 +31,7 @@ const textOf = (node: unknown): string => {
 
 // The engine beneath a started session: the agent list, the panes, and one agent's conversation.
 const start = async ($: { session: { start: (e: never) => Promise<unknown> } }, on: On, world: World) => {
-  on('command.register', () => ({ value: { command: 'agentpane' } }))
+  on('command.register', () => ({ value: { command: 'roster' } }))
   on('agent.list', async () => (await world.beforeList?.(), { value: world.agents }) as never)
   on('ui.panes', () => ({ value: world.panes.map(id => ({ id, title: 'Agents', isShown: true, isFocused: false, isPlaced: world.placed ?? true })) }))
   on('ui.open', ($, e) => (world.opened++, world.panes = [e.id], (world.widths ??= []).push(e.columns), (world.focus ??= []).push(e.focus), (world.rows ??= []).push(e.rows), { value: { isPlaced: true } }) as never)
@@ -144,7 +144,7 @@ test('closed by hand while agents run, the pane stays shut until a new agent sta
   await start($, on, world)
   await clock.advance(1_000)
   expect(world.opened).toBe(1)
-  await $.command.run({ command: 'agentpane', args: '' } as never)
+  await $.command.run({ command: 'roster', args: '' } as never)
   expect(world.closed).toBe(1)
   await clock.advance(5_000)
   expect(world.opened).toBe(1)
@@ -243,7 +243,7 @@ test('inline, a pane the person opened is never closed by the mod', async ($, on
   const clock = mock.clock(on)
   const world: World = { agents: [], panes: [], opened: 0, closed: 0 }
   await start($, on, world)
-  await $.command.run({ command: 'agentpane', args: '' } as never) // the person opens it on the main screen
+  await $.command.run({ command: 'roster', args: '' } as never) // the person opens it on the main screen
   const inline = {
     ...(PANE as object),
     props: { ...(PANE as { props: object }).props, placement: 'inline' },
@@ -262,13 +262,13 @@ test('inline, a pane the person opened is never closed by the mod', async ($, on
   await band.unmount()
 })
 
-test('/agentpane shows a pane that waits unplaced, rather than closing it', async ($, on) => {
+test('/roster shows a pane that waits unplaced, rather than closing it', async ($, on) => {
   const clock = mock.clock(on)
   const world: World = { agents: [running('a1')], panes: [], opened: 0, closed: 0, placed: false }
   await start($, on, world)
   await clock.advance(1_000)
   expect(world.opened).toBe(1)
-  const said = await $.command.run({ command: 'agentpane', args: '' } as never)
+  const said = await $.command.run({ command: 'roster', args: '' } as never)
   expect(JSON.stringify(said)).toContain('opened')
   expect(world.closed).toBe(0)
 })
@@ -281,8 +281,8 @@ test('a Stop pressed once does not stay armed past closing the pane', async ($, 
   const ui = await $.ui.mount(PANE)
   await ui.press({ key: 'agent-a1' })
   await ui.press({ key: 'stop' })
-  await $.command.run({ command: 'agentpane', args: '' } as never) // closes it
-  await $.command.run({ command: 'agentpane', args: '' } as never) // opens it again
+  await $.command.run({ command: 'roster', args: '' } as never) // closes it
+  await $.command.run({ command: 'roster', args: '' } as never) // opens it again
   await ui.press({ key: 'agent-a1' })
   expect(await ui.find({ type: 'Button', text: /Confirm stop/ })).toBeUndefined()
   await ui.unmount()
@@ -780,7 +780,7 @@ test('with autoOpen off, a new agent leaves a pane folded by hand folded, its ta
   const clock = mock.clock(on)
   const world: World = { agents: [running('a1')], panes: [], opened: 0, closed: 0 }
   await start($, on, world)
-  await $.command.run({ command: 'agentpane', args: '' } as never)
+  await $.command.run({ command: 'roster', args: '' } as never)
   await clock.advance(1_000)
   const pane = await $.ui.mount(PANE)
   await pane.press({ key: 'collapse' })

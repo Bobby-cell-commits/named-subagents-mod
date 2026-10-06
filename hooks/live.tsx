@@ -1,4 +1,4 @@
-// From agentpane 1.1.4 by Anji Xu (https://github.com/xuanji86/claude-agentpane, MIT: see LICENSE-agentpane); unchanged.
+// From agentpane 1.1.4 by Anji Xu (https://github.com/xuanji86/claude-agentpane, MIT: see LICENSE-agentpane); `markOnly` added.
 // A running agent's live line, drawn on the surface's own frame clock so only this region redraws, not the
 // pane: Claude Code's spinner glyph, a shimmer across "Running…", and a clock. `since` and `now` come from
 // the hooks module's clock; between its redraws the clock counts on from them. `clockOnly` draws the clock

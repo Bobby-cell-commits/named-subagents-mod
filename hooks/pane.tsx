@@ -4,8 +4,17 @@
 // From agentpane 1.1.4 by Anji Xu (https://github.com/xuanji86/claude-agentpane, MIT: see LICENSE-agentpane),
 // as are live.tsx, lanes.tsx and time.ts. Changed here: a name column, the roster (an agent a row, in
 // columns), `idle` read as done or waiting, a shared model said once, paths relative to the session, and
-// this mod's own state keys. This file also holds the two hooks naming shares with the pane, session.start
-// and agent.spawn, since a plugin hooks an event once: naming's part of each is a call into names.ts.
+// this mod's own state keys. The command is /roster here, and one switch (`pane`) turns all of the pane off.
+// This file also holds the two hooks naming shares with the pane, session.start and agent.spawn, since a
+// plugin hooks an event once: naming's part of each is a call into names.ts. They are registered first and
+// stay with the pane switched off; the pane's own hooks follow and do not.
+//
+// To bring a later agentpane in: the copy was taken at upstream commit 17be889 (1.1.4). Clone
+// xuanji86/claude-agentpane, run `git diff 17be889 <new> -- hooks/ types/`, and apply it by hand: its
+// hooks/register.tsx is this file, hooks/pane.test.tsx is tests/pane.test.tsx, hooks/agentpane.test.ts is
+// tests/pane-logic.test.ts, and live.tsx, lanes.tsx, time.ts and types/index.d.ts keep their names. Its
+// hooks/hooks.json is not used here, and its options are in .claude-plugin/plugin.json: diff that too. Then
+// put the new commit in this note and in the README's Credits.
 import { atom, read, update } from 'claude-code'
 import type { AgentInfo, EngineInterface, Register, RenderChildren, RenderElement, SessionMessage, TurnUsage } from 'claude-code'
 
@@ -75,12 +84,13 @@ const CLOSE_MARK_COLS = 3 // the engine draws its close mark over the end of the
 const BAND_RIGHT_PAD = 5 // clear of the engine's [-] band toggle at the band's top right
 
 // The person's settings for the pane (`/config`, or pluginConfigs.named-subagents-mod.options in settings.json).
-export type Config = { autoOpen: boolean; foldAfterMs: number; motion: boolean; toasts: boolean; keepFinished: number; statusLine: boolean }
+export type Config = { pane: boolean; autoOpen: boolean; foldAfterMs: number; motion: boolean; toasts: boolean; keepFinished: number; statusLine: boolean }
 export const parseConfig = (options: unknown): Config => {
   const o = (options && typeof options === 'object' ? options : {}) as Record<string, unknown>
   const num = (v: unknown, d: number, lo: number, hi: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : d)
   const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d)
   return {
+    pane: bool(o.pane, true), // the one switch: off, the mod is names only
     autoOpen: bool(o.autoOpen, true),
     foldAfterMs: num(o.foldAfter, 10, 0, 3600) * 1000,
     motion: bool(o.motion, true),
@@ -664,6 +674,25 @@ async function unfold($: EngineInterface) {
   await openPane($, (await read($, viewing)) ? 'conversation' : 'list')
 }
 
+// The pane is switched off. Flipped mid-session, the reload finds what the pane left: its count under the
+// prompt, the pane itself if open, and its list, fold and open conversation in the session's state. All
+// three go, so switching it on again starts clean (an agent that finished meanwhile would else be announced
+// then, with the whole time off as its run). A session that starts with the pane off has none of them, and
+// nothing is closed or written. Never rejects.
+async function putAway($: EngineInterface) {
+  try {
+    // The whole line: a reload has already forgotten naming's alarm (status.ts), as it does with the pane on.
+    $.ui.status(withRunning(undefined))
+    if ((await $.ui.panes()).some(p => p.id === PANE)) await $.ui.close({ id: PANE })
+    if ((await read($, agents)).length || (await read($, folded)) || (await read($, tab)) || (await read($, viewing))) {
+      await update($, agents, () => [])
+      await update($, tab, () => false)
+      await showList($, { clearFold: true })
+    }
+  } catch { // audit-allow: fail-loud — a pane that could not be closed is on screen, which says so itself
+  }
+}
+
 // Stop a running agent with Claude Code's own TaskStop, on the person's confirmed press of Stop.
 async function stopAgent($: EngineInterface, a: Agent) {
   const name = nameOf(a)
@@ -690,13 +719,44 @@ export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     setRoot(e.cwd)
     if (naming) await Promise.resolve($.command.register(NAMES_COMMAND)).catch(() => raise(sayOf($), 'could not register /names'))
+    if (!cfg.pane) {
+      void putAway($) // not awaited: a session start does not wait on the pane's leftovers
+      return next(e)
+    }
     $.clock.every(SYNC_MS, () => void sync($)) // before the command: without it the pane still lists, counts and opens
-    await Promise.resolve($.command.register({ name: 'agentpane', description: 'Show or hide the pane of running agents' }))
-      .catch(() => raise(sayOf($), 'could not register /agentpane'))
+    await Promise.resolve($.command.register({ name: 'roster', description: 'Show or hide the pane of running agents' }))
+      .catch(() => raise(sayOf($), 'could not register /roster'))
     return next(e)
   })
 
-  on('command.run', { command: 'agentpane' }, async $ => {
+  // An agent is listed the moment it starts, with the model it runs on, ahead of the next poll.
+  on('agent.spawn', async ($, e, next) => {
+    const started = await next(e)
+    const id = started.agentId
+    // Naming's check that the name it drew for this call is the one the agent got. First, and it never
+    // throws: nothing the pane does below can skip it.
+    if (naming) await checkSpawn(sayOf($), () => $.agent.list(), e, id)
+    if (cfg.pane && id && !started.deny) {
+      const a: Agent = {
+        id, description: e.description, type: e.subagentType, status: 'running',
+        ...(e.parentAgentId && { parentId: e.parentAgentId }), ...(e.name && { name: e.name }),
+        firstSeen: await $.clock.now(), seenRunning: true, ...(started.model && { model: started.model }),
+      }
+      spawnedSinceSync.add(id)
+      void update($, agents, list => spawned(list, a)).catch(() => undefined)
+    }
+    return started
+  }).catch(($, e, next) => next(e)) // replays the spawn if it already ran; never refuses one
+
+  // The pane switched off: the two hooks above are naming's too and stay; none of the pane's own below.
+  // A session cannot take a command back, so a /roster registered before the switch was flipped is still
+  // offered until the session ends: it says why nothing opens.
+  if (!cfg.pane) {
+    on('command.run', { command: 'roster' }, async () => ({ text: 'The agents pane is switched off. "Show the agents pane" in /config turns it on.' }))
+    return
+  }
+
+  on('command.run', { command: 'roster' }, async $ => {
     const pane = (await $.ui.panes()).find(p => p.id === PANE)
     if (pane?.isPlaced) {
       await $.ui.close({ id: PANE })
@@ -718,7 +778,7 @@ export const register: Register = (on, options) => {
       autoOpened = false
       await update($, confirmStop, () => null)
       if (!foldingAway) {
-        // closed by hand (its close mark, Esc, ctrl+x x, /agentpane) while agents run: stays shut until a new one starts
+        // closed by hand (its close mark, Esc, ctrl+x x, /roster) while agents run: stays shut until a new one starts
         closedByPerson = (await read($, agents)).some(a => a.status === 'running')
         await update($, viewing, () => null)
       }
@@ -738,25 +798,6 @@ export const register: Register = (on, options) => {
     redraw($, id)
     return result
   })
-
-  // An agent is listed the moment it starts, with the model it runs on, ahead of the next poll.
-  on('agent.spawn', async ($, e, next) => {
-    const started = await next(e)
-    const id = started.agentId
-    // Naming's check that the name it drew for this call is the one the agent got. First, and it never
-    // throws: nothing the pane does below can skip it.
-    if (naming) await checkSpawn(sayOf($), () => $.agent.list(), e, id)
-    if (id && !started.deny) {
-      const a: Agent = {
-        id, description: e.description, type: e.subagentType, status: 'running',
-        ...(e.parentAgentId && { parentId: e.parentAgentId }), ...(e.name && { name: e.name }),
-        firstSeen: await $.clock.now(), seenRunning: true, ...(started.model && { model: started.model }),
-      }
-      spawnedSinceSync.add(id)
-      void update($, agents, list => spawned(list, a)).catch(() => undefined)
-    }
-    return started
-  }).catch(($, e, next) => next(e)) // replays the spawn if it already ran; never refuses one
 
   // What each agent's responses cost, as the API reported each one; a response grows its conversation. A
   // loop no listed agent claims (a workflow's agent, a compaction or memory fork) is counted on its own.

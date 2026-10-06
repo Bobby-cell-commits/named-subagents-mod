@@ -172,8 +172,9 @@ describe('agents', () => {
     expect([runsOn({ model: 'claude-fable-5-1', effort: 'xhigh' }), runsOn({ model: 'claude-fable-5-1' }), runsOn({ effort: 'low' }), runsOn({})]).toEqual(['Fable 5.1 · xhigh', 'Fable 5.1', 'low', ''])
   })
   test('settings fall back to their defaults and stay in range', async () => {
-    expect(parseConfig(undefined)).toEqual({ autoOpen: true, foldAfterMs: 10_000, motion: true, toasts: true, keepFinished: 8, statusLine: true })
-    expect(parseConfig({ autoOpen: false, foldAfter: 0, keepFinished: 99, motion: 'no', statusLine: false })).toEqual({ autoOpen: false, foldAfterMs: 0, motion: true, toasts: true, keepFinished: 30, statusLine: false })
+    expect(parseConfig(undefined)).toEqual({ pane: true, autoOpen: true, foldAfterMs: 10_000, motion: true, toasts: true, keepFinished: 8, statusLine: true })
+    expect(parseConfig({ pane: false }).pane).toBe(false)
+    expect(parseConfig({ autoOpen: false, foldAfter: 0, keepFinished: 99, motion: 'no', statusLine: false })).toEqual({ pane: true, autoOpen: false, foldAfterMs: 0, motion: true, toasts: true, keepFinished: 30, statusLine: false })
   })
   test('the latest batch begins after a quiet minute, and a running agent holds it open', async () => {
     const ran = (id: string, firstSeen: number, endedAt?: number, status = 'completed') =>

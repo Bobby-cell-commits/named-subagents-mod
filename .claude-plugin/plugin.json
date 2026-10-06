@@ -34,10 +34,16 @@
       "description": "Leave out the built-in names and draw only from the ones you add.",
       "default": false
     },
+    "pane": {
+      "type": "boolean",
+      "title": "Show the agents pane",
+      "description": "Off, the mod only names agents: no pane, no count under the prompt, no finish toasts, no /roster.",
+      "default": true
+    },
     "autoOpen": {
       "type": "boolean",
       "title": "Pane: open by itself",
-      "description": "Open the agents pane when an agent starts. Off, /agentpane opens it.",
+      "description": "Open the agents pane when an agent starts. Off, /roster opens it.",
       "default": true
     },
     "foldAfter": {

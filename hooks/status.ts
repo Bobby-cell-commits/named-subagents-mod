@@ -5,7 +5,7 @@
 // follows it: an alarm can stand for a whole session (a names file that stays wrong).
 //
 // These are module variables, so a reload forgets a standing alarm; the pane's first sync
-// after it then writes the line afresh. A names-file problem is alarmed again at the next
+// after it (or, with the pane switched off, the session start) then writes the line afresh. A names-file problem is alarmed again at the next
 // dispatch; a "drew X but…" alarm is not.
 
 let alarm: string | undefined;
