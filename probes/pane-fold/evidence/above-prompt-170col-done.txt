@@ -1,0 +1,43 @@
+  requiring longer recovery windows.
+
+  ---
+
+  Cache Design (cache.txt)
+
+  This design implements a fixed-capacity cache of 100 entries using Least Recently Used (LRU) eviction. The strategy is straightforward: when capacity is reached, the
+  entry not accessed for the longest time is discarded. LRU is a pragmatic choice balancing simplicity with effectiveness. It assumes temporal locality—recent accesses
+  predict near-future accesses—a reasonable heuristic for many workloads. The fixed capacity trades flexibility for predictability; memory consumption never exceeds
+  bounds, aiding resource planning.
+
+  However, LRU's weakness is insensitivity to access frequency: an entry accessed once then ignored forever may evict a frequently accessed entry if older. The 100-entry
+  limit assumes this threshold suits the expected working set; too small and thrashing occurs, too large and memory is wasted. This design shines in workloads with strong
+  temporal locality but struggles with bursty access patterns or bimodal frequencies. No warmup or adaptive sizing mechanism is mentioned, suggesting a static,
+  fire-and-forget approach suitable for predictable, stable access patterns rather than dynamic or heterogeneous demand.
+
+  ---
+
+  Parser Design (parser.txt)
+
+  This parser employs a line-delimited, comma-separated values approach—a deliberate simplicity that prioritizes straightforward field extraction over robustness. By
+  splitting on commas and trimming whitespace, it handles common formatting variations without explicit handling logic. The design assumes well-formed input: no escaped
+  delimiters, no quoted fields containing commas, no newlines within values. This constraint eliminates parsing complexity but severely limits format flexibility.
+
+  The tradeoff favors speed and code brevity over completeness. Single-pass processing with minimal string operations keeps memory footprint low and execution fast,
+  suitable for large files where performance matters. The approach mirrors historical CSV handling before standards emerged. However, it fails gracefully—malformed rows
+  either produce extra fields or collapse, rather than throwing errors, which aids batch processing but complicates debugging. Field trimming implicitly addresses
+  leading/trailing whitespace, a pragmatic choice that handles casual formatting inconsistencies. The design is intentionally lossy: no escaping recovery, no column
+  tracking. It suits data that's already semiclean and doesn't require defensive parsing—essentially a regex-replacement shortcut masquerading as a parser.
+
+✻ Brewed for 19s · done 10:55 PM
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────✕─╮
+│ ✻ Agents · Haiku 4.5                                                                      3 done [ ▾ hide ]                                                            │
+│ ✓ Monet    Read and essay: retry.txt design   done                                      1 tool    82.8k     6s                                                         │
+│ ✓ Vermeer  Read and essay: cache.txt design   done                                      1 tool    82.9k     6s                                                         │
+│ ✓ Mucha    Read and essay: parser.txt design  done                                      1 tool    82.7k     6s                                                         │
+│ ✓ 3 done in 7s · 19s of agent time (2.6× in parallel) · 3 tool uses · 248k tokens                                                                                      │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
+❯
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏸ manual mode on · /tasks to see subagents · ← 1 agent                                                                                                             /rc

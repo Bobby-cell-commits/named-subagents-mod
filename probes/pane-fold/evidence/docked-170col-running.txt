@@ -1,0 +1,45 @@
+                                                                    │                                                                                                   ✕
+ ▐▛███▛█   Claude Code v2.1.292                                     │  ✻ Agents · Haiku 4.5                                                                  3 running
+▝▜██████▀  Haiku 4.5                                                │
+ ▝▝   ▝▝   ~/scratch                               · /rc            │  · DaVinci  Read retry.txt and write design es…  Read(retry.txt)             1 tool    25.1k     5s
+                                                                    │  ✳ Hokusai  Read cache.txt and write design es…  Read(cache.txt)             1 tool    25.2k     4s
+                                                                    │  ✽ Mucha    Read parser.txt and write design e…  Read(parser.txt)            1 tool    25.2k     3s
+❯ Fan out 3 parallel background agents in one message. Read only:   │
+  each uses only the Read tool, reads one file in this folder, then │
+  writes a 150-word essay on the design it describes. Agent 1:      │
+  retry.txt. Agent 2: cache.txt. Agent 3: parser.txt. Do not use    │
+  Bash.                                                             │
+                                                                    │
+● 3 background agents launched (↓ to manage)                        │
+   ├ Read retry.txt and write design essay                          │
+   ├ Read cache.txt and write design essay                          │
+   └ Read parser.txt and write design essay                         │╷
+                                                                    ││
+● Three agents launched in parallel — each reading one file and     │▸
+  writing a 150-word design essay. They're working in the           ││
+  background; you'll be notified when they complete.                │╵
+                                                                    │
+✻ Waiting for 3 background agents to finish                         │
+                                                                    │
+                                                                    │
+                                                                    │
+                                                                    │
+                                                                    │
+                                                                    │
+                                                                    │
+                                                                    │
+                                                                    │  ── timeline ──────────────────────────────────────────────────────────────────────────────────────
+                                                                    │  ✻ DaVinci  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━      5s
+                                                                    │  ✻ Hokusai  ············━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━      4s
+                                                                    │  ✻ Mucha    ························━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━      3s
+                                                                    │  click an agent to open it
+                                                                    │
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
+❯
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏸ manual mode on · ? for shortcuts · ← 1 agent · ↓ to manage
+
+  ● main
+  ◯ DaVinci  Read retry.txt and write design essay                                                                                                   5s · ↓ 27.5k tokens
+  ◯ Hokusai  Read cache.txt and write design essay                                                                                                   4s · ↓ 27.4k tokens
+  ◯ Mucha    Read parser.txt and write design essay                                                                                                  3s · ↓ 27.3k tokens
