@@ -19,7 +19,7 @@ the screen twice a second, and `scripts/render_tree_gif.py` draws the chosen fra
 the task tree; the banner and status line are left out, and a frame with something to read is held longer).
 It was recorded on 0.2.0, before the pane, in a 112-column terminal: at that width 0.3.0 adds a line
 under the prompt counting the running agents and a toast as each finishes, and the pane itself opens from
-144 columns (or when you type `/agentpane`).
+144 columns (or when you type `/roster`).
 
 It is a Claude Code mod (function hooks), so it needs **Claude Code 2.1.287 or later** and nothing
 else: no Python, no Node at runtime. It replaces the retired
@@ -137,14 +137,14 @@ model named itself is listed under that name; one with no name (naming turned of
 - **Where it shows.** In the fullscreen layout (`/tui fullscreen`) it docks beside the transcript.
   On the main screen it is a summary of up to eight rows above the prompt, in the same columns. It
   opens by itself when an agent starts, in a terminal at least 144 columns wide; narrower than that,
-  `/agentpane` opens it, and until then a line under the prompt counts the running agents
+  `/roster` opens it, and until then a line under the prompt counts the running agents
   (`✻ 2 of 4 agents running`).
 - **A conversation.** Press an agent's name or task: the pane widens and shows its brief, its replies
   and its tool calls with their results. `b` goes back, `k` and `j` step through it, `Esc` gives the
   keyboard back.
 - **Folding.** Ten seconds after the last agent finishes the pane folds to a tab above the prompt
   (`◂ Agents ✓ 3`); press the tab to bring it back, and a new agent brings it back by itself. The `▸`
-  handle on the pane's left edge folds it by hand. `/agentpane` opens or closes it.
+  handle on the pane's left edge folds it by hand. `/roster` opens or closes it.
 - **Also there.** A model shared by every agent is said once, in the header. An agent's own subagents
   sit indented under it. A timeline puts the latest batch on one time axis. A finished batch gets a
   receipt (`✓ 3 done in 8s · 21s of agent time (2.6× in parallel) · 3 tool uses · 158k tokens`) and
@@ -185,16 +185,22 @@ into this mod with a name column, the roster layout and a few wording changes. S
 | `enabled` | `true` | `false` turns naming off without uninstalling (and `/names` with it) |
 | `names` | empty | Your names, separated by commas; they join every built-in pool |
 | `only_custom` | `false` | `true` leaves the built-in names out |
-| `autoOpen` | `true` | open the pane when an agent starts; off, `/agentpane` opens it |
+| `pane` | `true` | `false` turns the pane off: names only (see below) |
+| `autoOpen` | `true` | open the pane when an agent starts; off, `/roster` opens it |
 | `foldAfter` | `10` | seconds after the last agent finishes before the pane folds; `0` keeps it open |
 | `motion` | `true` | animate the spinner; off, it stands still and the clocks still run |
 | `toasts` | `true` | a toast when agents finish |
 | `keepFinished` | `8` | finished agents the list keeps (1–30) |
 | `statusLine` | `true` | count the running agents under the prompt while the pane is not on screen |
 
-The first four are naming's, the last six the pane's (shown as *Pane: …* on the options screen). To
-have names without the pane, turn off `autoOpen`, `toasts` and `statusLine`. `enabled` turns off
-naming only: the pane then lists agents by type.
+The first four are naming's. `pane` (*Show the agents pane* on the options screen) is the pane's one
+switch, and the six after it (*Pane: …*) adjust the pane while it is on. To have names without the
+pane, turn `pane` off: nothing opens, nothing is counted under the prompt, no finish toast and no tab
+appear, the agent list is not read every second and `/roster` is not offered. Naming, `/names` and
+the check of each spawned agent's name work as before. Turned off mid-session, an open pane closes and
+its list is forgotten; `/roster` stays in the command list until the session ends (a session cannot take
+a command back) and answers that the pane is switched off.
+`enabled` turns off naming only: the pane then lists agents by type.
 
 ## Layout
 - `hooks/index.ts`: the hooks module `hooks.json` names; it registers the two halves.
@@ -221,7 +227,7 @@ naming only: the pane then lists agents by type.
 ```bash
 node scripts/gen_pool.mjs --check   # pool matches the registry
 node --test spec/*.spec.ts          # draw and custom-names logic, plain node 22.18+ (60 tests)
-claude plugin test .                # hooks against the engine's test kit (139 tests)
+claude plugin test .                # hooks against the engine's test kit (148 tests)
 claude plugin validate .
 ```
 CI runs the two node checks; the two `claude` checks need a local Claude Code.
@@ -253,7 +259,7 @@ captures).
 - With the retired 0.7.2 Python plugin also enabled, the mod's name wins, but the Python hooks still
   run (see `probes/mods-names-proof/README.md`). Uninstall the Python plugin.
 - The pane opens by itself only in a terminal at least 144 columns wide (Claude Code's rule for a pane
-  nobody asked for). Below that you get the line under the prompt and the toasts, and `/agentpane`.
+  nobody asked for). Below that you get the line under the prompt and the toasts, and `/roster`.
 - A row has no token count in a pane under 88 columns and no tool count under 72; both are in the
   agent's conversation header.
 - The pane's start times are when it first saw an agent, and its tokens count from when the mod loaded.
@@ -261,7 +267,7 @@ captures).
   older. The alarm also stays on the status line.
 - A reload of the mod (an option changed in `/config`, `/reload-plugins`) forgets a standing alarm. A
   names file that is still wrong is alarmed again at the next dispatch; a "drew X but…" alarm is not.
-- If `/agentpane` cannot be registered the mod says so in a toast, and the pane still opens by itself
+- If `/roster` cannot be registered the mod says so in a toast, and the pane still opens by itself
   and counts agents.
 - With the separate `agentpane` plugin also installed there are two panes with the same id. Uninstall
   it: `claude plugin uninstall agentpane@claude-agentpane`.
@@ -274,6 +280,18 @@ The agents pane is [agentpane](https://github.com/xuanji86/claude-agentpane) by 
 used under the MIT licence. Its notice is kept in [LICENSE-agentpane](LICENSE-agentpane) and covers
 `hooks/pane.tsx`, `hooks/live.tsx`, `hooks/lanes.tsx`, `hooks/time.ts`, `types/index.d.ts`,
 `tests/pane.test.tsx` and `tests/pane-logic.test.ts`, which carry this mod's changes on top.
+
+The pane here is a copy, so agentpane's later fixes arrive only by hand. It was taken at upstream commit
+[`17be889`](https://github.com/xuanji86/claude-agentpane/commit/17be889) (1.1.4). To bring a newer one in:
+```bash
+git clone https://github.com/xuanji86/claude-agentpane && cd claude-agentpane
+git diff 17be889 <new commit> -- hooks/ types/
+```
+Apply that diff by hand to the files listed above (`hooks/hooks.json` there is not used here; a new or
+changed option is in `.claude-plugin/plugin.json`, so diff that file too). Three have other names there: `hooks/register.tsx`
+is `hooks/pane.tsx` here, `hooks/pane.test.tsx` is `tests/pane.test.tsx` and `hooks/agentpane.test.ts` is
+`tests/pane-logic.test.ts`. Then run the checks under [Checks](#checks), and write the new commit here and at the top of
+`hooks/pane.tsx`. The command is `/roster` here and `/agentpane` there.
 
 ## License
 MIT. See [LICENSE](LICENSE); the pane's files are under [LICENSE-agentpane](LICENSE-agentpane), also MIT.

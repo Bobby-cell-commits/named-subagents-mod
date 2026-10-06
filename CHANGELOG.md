@@ -2,7 +2,7 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow SemVer.
 
-## [0.3.0] — 2026-10-06
+## [0.3.0] — 2026-10-07
 
 One install now gives the names and a pane that lists the agents under them.
 
@@ -10,8 +10,8 @@ One install now gives the names and a pane that lists the agents under them.
 - **The agents pane**, from [agentpane](https://github.com/xuanji86/claude-agentpane) 1.1.4 by Anji Xu
   (MIT; notice in `LICENSE-agentpane`): the session's subagents beside the conversation, what each is
   doing, its tokens and clock, its conversation a press away, a timeline, a receipt for each batch,
-  finish toasts, Stop, and a tab above the prompt once it folds. `/agentpane` opens or closes it.
-  On top of 1.1.4:
+  finish toasts, Stop, and a tab above the prompt once it folds. `/roster` opens or closes it
+  (agentpane's own command is `/agentpane`). On top of 1.1.4:
   - **Names:** an agent is listed under its name, in a column of its own; beside a name a row is the
     task alone (`Turing  map the hooks`), and the type shows in the conversation's header unless it is
     `general-purpose`. An agent with no name reads `Type(description)`.
@@ -25,11 +25,19 @@ One install now gives the names and a pane that lists the agents under them.
   - **Paths:** a tool call's paths under the session's directory are drawn relative.
   - **Timeline:** a lane is labelled by the agent's name alone.
   - **Wording:** the receipt reads `4 done in 18s`; a finish toast reads `✓ Turing done · 9s · map the hooks`.
-- Six options for the pane beside naming's four: `autoOpen`, `foldAfter`, `motion`, `toasts`,
+- **One switch for the pane:** the `pane` option (*Show the agents pane*, on by default). Off, the mod
+  is names only: no pane, no summary above the prompt, no tab, no count under the prompt, no finish
+  toasts, no once-a-second read of the agent list and no `/roster`. Naming, `/names` and the check of
+  each spawned agent's name are unchanged. Turned off mid-session, an open pane is closed, its count
+  cleared and its list forgotten, and a `/roster` the session still offers says the pane is off.
+- Six options that adjust the pane while it is on: `autoOpen`, `foldAfter`, `motion`, `toasts`,
   `keepFinished`, `statusLine`.
 - `tests/together.test.tsx`: an agent the mod names is listed in the pane under that name; both
   commands register; with naming off the pane lists by type; the two halves share the status line;
-  `/agentpane` failing to register is said and leaves the pane counting.
+  `/roster` failing to register is said and leaves the pane counting; with the pane off nothing of it
+  is registered, drawn, counted, toasted or kept, and naming is as before.
+- A note on bringing a later agentpane in (README Credits, top of `hooks/pane.tsx`): the copy was taken
+  at upstream `17be889`.
 - `probes/pane-fold/`: what the engine allows of one plugin (one hooks module, an event hooked once,
   `$` kept inside a file), and the live captures.
 - A demo GIF at the top of the README (`assets/demo.gif`): names in the task tree, then `/names set` and
@@ -45,7 +53,7 @@ One install now gives the names and a pane that lists the agents under them.
 - "naming failed; this agent runs unnamed" is raised only when the name did not reach the call. A
   failure beneath naming's hook (the Agent tool, another hook) after the name was set no longer
   raises it.
-- The pane's once-a-second list read starts before `/agentpane` is registered, and a failed
+- The pane's once-a-second list read starts before `/roster` is registered, and a failed
   registration raises a toast; in agentpane 1.1.4 it stopped the pane without a word.
 - The pane's state is kept under this mod's name (`named-subagents-mod.agents`, …), declared in
   `types/index.d.ts`.
