@@ -1,0 +1,34 @@
+  windows. Jitter desynchronizes clients. Safe to skip only on highly reliable idempotent operations, but
+  backoff cost is trivial—include it anyway.
+
+[38;5;246m✻[39m [38;5;246mCooked for 21s · done 9:28 PM[39m
+
+[38;5;246m[48;5;237m❯[39m [38;5;231m/names set pirates Kidd Bonny Teach Rackham[39m [49m
+[38;5;246m  ⎿  [39mnamed-subagents-mod: Set pirates: Kidd, Bonny, Teach, Rackham.
+     Use it for every agent with /names use pirates.
+     399 names in 15 pools now. Saved to ~/.claude/named-subagents.json.
+
+[38;5;246m[48;5;237m❯[39m [38;5;231m/names use pirates[39m [49m
+[38;5;246m  ⎿  [39mnamed-subagents-mod: Every agent now draws from pirates.
+     399 names in 15 pools now. Saved to ~/.claude/named-subagents.json.
+
+[38;5;246m[48;5;237m❯ [38;5;231mFan out 3 parallel agents, no tools, ~120 words each: explain how a B-tree stays balanced; plan the tests for[39m
+  [38;5;231ma rate limiter; find where a cache could serve stale data.[39m
+[49m
+[38;5;114m●[39m [1m3[0m background agents launched [38;5;246m(↓ to manage)[39m
+   [38;5;246m├[39m [1mB-tree balancing mechanics[0m
+   [38;5;246m├[39m [1mRate limiter test planning[0m
+   [38;5;246m└[39m [1mStale cache data risks[0m
+
+[38;5;174m✽[39m [38;5;180mSynthesizing…[38;5;174m [38;5;246m(5s · ↓[39m [38;5;246m447 tokens)[39m
+
+[38;5;244m────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
+[38;5;246m❯ [39m
+[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[39m  [38;5;246m⏸ manual mode on · esc to interrupt · ← for agents · ↓ to manage[39m                                         [38;5;114m/rc[39m
+
+[1m  ● main[0m
+[38;5;246m  ◯ [39mTeach    [38;5;246mB-tree balancing mechanics[39m                                                    [38;5;246m2s · ↑ 25.2k tokens[39m
+[38;5;246m [39m [38;5;246m◯[39m Kidd     [38;5;246mRate[39m [38;5;246mlimiter test planning[39m                                                       [38;5;246m1s · ↑ 50[39m [38;5;246mtokens[39m
+[38;5;246m [39m [38;5;246m◯[39m Rackham  [38;5;246mStale cache data risks[39m                                                                         [38;5;246m0s[39m
+

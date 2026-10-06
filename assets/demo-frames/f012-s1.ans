@@ -1,0 +1,34 @@
+
+
+
+
+[38;5;174m ▐[48;5;16m▛███▛█[39m[49m   [1mClaude[0m [1mCode[0m [38;5;246mv2.1.291[39m
+[38;5;174m▝▜[48;5;16m█████[49m█▀[39m  [38;5;246mHaiku[39m [38;5;246m4.5[39m [38;5;246m·[39m [38;5;246mClaude[39m [38;5;246mMax[39m
+[38;5;174m ▝▝[39m   [38;5;174m▝▝[39m   [38;5;246m~/.claude/jobs/f12b1204/tmp/demo/weather-cli[39m
+
+
+[38;5;246m[48;5;237m❯ [38;5;231mFan out 4 parallel agents, no tools, ~120 words each: map how DNS resolution works; explain why event [39m
+  [38;5;231msourcing is chosen over CRUD; find the likely root cause of a login test that is flaky only on CI; review a [39m
+  [38;5;231mretry loop that has no backoff.[39m
+[49m
+[38;5;114m●[39m [1m2[0m background agents launched [38;5;246m(↓ to manage)[39m
+   [38;5;246m├[39m [1mDNS resolution mechanics explanation[0m
+   [38;5;246m└[39m [1mEvent sourcing vs CRUD analysis[0m
+
+[38;5;174m*[39m [38;5;174mHat[38;5;216mchi[38;5;174mng… [38;5;246m(5s · ↓[39m [38;5;246m430 tokens)[39m
+
+[38;5;244m────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
+[38;5;246m❯ [39m
+[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[39m  [38;5;246m⏸ manual mode on · esc to interrupt · ← for agents · ↓ to manage[39m                                         [38;5;114m/rc[39m
+
+[1m  ● main[0m
+[38;5;246m  ◯ [39mTimur   [38;5;246mDNS resolution mechanics explanation[39m                                           [38;5;246m2s · ↑ 25.0k tokens[39m
+[38;5;246m [39m [38;5;246m◯[39m Edison  [38;5;246mEvent sourcing vs CRUD analysis[39m                                                   [38;5;246m1s · ↑ 50 tokens[39m
+
+
+
+
+
+
+

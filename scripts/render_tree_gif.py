@@ -12,7 +12,11 @@ which is, in short:
 then the same for "/names set …", "/names use …" and the second prompt.
 Render:
     python3 scripts/render_tree_gif.py rec assets/demo.gif
-The frame list near the bottom picks which captured frames to use.
+The frame list near the bottom picks which captured frames to use, by number, so it fits one
+recording only. That recording is kept in assets/demo-frames (the session link, the home path
+and the shell line above the banner removed), so the GIF can be redrawn without a new session:
+    python3 scripts/render_tree_gif.py assets/demo-frames assets/demo.gif
+The title bar's version is read from .claude-plugin/plugin.json.
 Fonts: JetBrains Mono NL Nerd Font, DejaVu Sans, Noto Color Emoji.
 
 Keeps only real captured lines: the transcript region (above the input box) and
@@ -21,6 +25,7 @@ line that started the session and the status line (usage, paths) are left out, a
 home directory in a printed path reads `~`. Frame timing is chosen for readability.
 """
 
+import json
 import os
 import re
 import sys
@@ -36,6 +41,7 @@ FS = 15
 font, bold = ImageFont.truetype(FONT, FS), ImageFont.truetype(BOLD, FS)
 symfont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", FS)
 HOME = os.path.expanduser("~")
+VERSION = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".claude-plugin", "plugin.json")))["version"]
 SYM = set("✢✻✽✶✳·")  # Claude Code spinner glyphs the mono font lacks
 efont = ImageFont.truetype(EMOJI, 109)
 CW = round(font.getlength("M"))
@@ -175,7 +181,7 @@ def draw(frame_rows, H):
     d.rectangle([0, 0, W, TITLE_H], fill=(24, 24, 37))
     for k, c in enumerate([(255, 95, 86), (255, 189, 46), (39, 201, 63)]):
         d.ellipse([16 + k * 22, 11, 28 + k * 22, 23], fill=c)
-    d.text((W // 2, TITLE_H // 2), "claude  ·  named-subagents-mod 0.2.0", fill=(140, 140, 170), font=font, anchor="mm")
+    d.text((W // 2, TITLE_H // 2), f"claude  ·  named-subagents-mod {VERSION}", fill=(140, 140, 170), font=font, anchor="mm")
     y = TITLE_H + PAD_Y
     for cells in frame_rows:
         x = PAD_X

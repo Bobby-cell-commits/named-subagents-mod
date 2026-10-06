@@ -1,0 +1,34 @@
+
+  Client queries recursive resolver → resolver queries root → TLD → authoritative nameserver. Authoritative
+  server returns DNS record; resolver caches and returns to client. Both client and resolver cache until TTL
+  expires. Layered hierarchy distributes load; caching eliminates redundant queries across the network.
+
+  [1m2. Event Sourcing vs. CRUD[0m
+
+  Event sourcing stores immutable state-change events instead of current state. Wins: complete history for
+  audits, temporal queries ("state on date X"), compliance, debugging. Trade-off: event versioning and replay
+  logic add complexity. CRUD simpler for history-irrelevant domains. Event sourcing dominates finance, audit
+  trails, and event-driven architectures.
+
+  [1m3. Flaky CI Login Test[0m
+
+  Ranked by likelihood: [1mtest isolation[0m (40%)—shared state/cache between parallel tests; [1masync races[0m (25%)—tight
+  timeouts, unwaited promises; [1menvironment drift[0m (15%)—missing secrets, URL mismatches, clock skew; [1mmock [0m
+  [1mbrittleness[0m (10%); [1mresource contention[0m (7%); [1mCI setup[0m (3%). First move: verify [38;5;153mbeforeEach[39m/[38;5;153mafterEach[39m cleanup
+  and async waits around auth mocks.
+
+  [1m4. Retry Loop Without Backoff[0m
+
+  Instant retries re-hammer a degraded service, preventing recovery (cascading collapse). Synchronized clients
+  cause thundering herd—overwhelming spikes. Exponential backoff (2^attempt) stretches retries, giving recovery
+  windows. Jitter desynchronizes clients. Safe to skip only on highly reliable idempotent operations, but
+  backoff cost is trivial—include it anyway.
+
+[38;5;246m✻[39m [38;5;246mCooked for 21s · done 9:28 PM[39m
+
+[38;5;244m────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
+[39m❯ 
+[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[39m  [38;5;246m⏸ manual mode on · /tasks to see subagents · ← for agents[39m                                                [38;5;114m/rc[39m
+
+

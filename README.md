@@ -137,7 +137,8 @@ full, because rewriting it would drop the unread part; `/names reset` starts cle
 - `scripts/gen_pool.mjs`: regenerates `hooks/pool.ts` from `registry.json`; `--check` exits 1 when it
   is stale.
 - `scripts/capture_demo.sh`, `scripts/render_tree_gif.py`: record and draw `assets/demo.gif` (tmux and
-  Python with Pillow; not needed to use the mod).
+  Python with Pillow; not needed to use the mod). `assets/demo-frames/` is the recording the GIF was drawn
+  from, so `python3 scripts/render_tree_gif.py assets/demo-frames assets/demo.gif` redraws it.
 - `spec/`: draw and custom-names logic tests (plain node). `tests/`: hook tests (the engine's test kit).
 - `examples/`: a names file to import. `probes/`: the live proofs and the TUI capture driver.
 
