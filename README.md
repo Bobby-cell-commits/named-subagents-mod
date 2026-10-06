@@ -6,6 +6,16 @@ Fan out several subagents in Claude Code and the task tree shows each one by its
 every subagent its own themed name instead (`Turing`, `Magellan`, `Holmes`), drawn from a 395-name
 registry and never shared by two live agents.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Bobby-cell-commits/named-subagents-mod/master/assets/demo.gif"
+       alt="A Claude Code 2.1.291 session: four subagents fan out and the task tree shows them as Timur, Edison, Fandorin and Scalia; after /names set pirates and /names use pirates the next three are Teach, Kidd and Rackham"
+       width="760">
+</p>
+
+The GIF is a real session, not a mock-up: `scripts/capture_demo.sh` drives Claude Code in tmux and saves
+the screen twice a second, and `scripts/render_tree_gif.py` draws the chosen frames (the transcript and
+the task tree; the banner and status line are left out, and a frame with something to read is held longer).
+
 It is a Claude Code mod (function hooks), so it needs **Claude Code 2.1.287 or later** and nothing
 else: no Python, no Node at runtime. It replaces the retired
 [named-subagents](https://github.com/Bobby-cell-commits/named-subagents) Python plugin (last release
@@ -126,6 +136,8 @@ full, because rewriting it would drop the unread part; `/names reset` starts cle
 - `registry.json`: the name pool (14 categories, 395 names), the source of `hooks/pool.ts`.
 - `scripts/gen_pool.mjs`: regenerates `hooks/pool.ts` from `registry.json`; `--check` exits 1 when it
   is stale.
+- `scripts/capture_demo.sh`, `scripts/render_tree_gif.py`: record and draw `assets/demo.gif` (tmux and
+  Python with Pillow; not needed to use the mod).
 - `spec/`: draw and custom-names logic tests (plain node). `tests/`: hook tests (the engine's test kit).
 - `examples/`: a names file to import. `probes/`: the live proofs and the TUI capture driver.
 

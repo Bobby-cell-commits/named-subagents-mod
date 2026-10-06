@@ -4,6 +4,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/); versions fol
 
 ## [Unreleased]
 
+### Added
+- A demo GIF at the top of the README (`assets/demo.gif`): names in the task tree, then `/names set` and
+  `/names use` and a second fan-out drawing from that set. `scripts/capture_demo.sh` records it and
+  `scripts/render_tree_gif.py` draws it.
+
 ## [0.2.0] — 2026-10-06
 
 Your own names: add some, change the built-in ones, or bring a whole set.
