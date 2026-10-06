@@ -1,34 +1,36 @@
-
-[38;5;114m●[39m [1m4[0m background agents launched [38;5;246m(↓ to manage)[39m
-   [38;5;246m├[39m [1mDNS resolution mechanics explanation[0m
-   [38;5;246m├[39m [1mEvent sourcing vs CRUD analysis[0m
-   [38;5;246m├[39m [1mFlaky CI login test root cause[0m
-   [38;5;246m└[39m [1mBackoff-less retry loop review[0m
-
-[38;5;231m●[39m Four agents are running in parallel — DNS resolution, event sourcing rationale, CI test flakiness, and retry
-  backoff critique. Notifications will arrive as each completes.
-
-[38;5;246m✻[39m [38;5;246mWaiting for [1m4[0m[38;5;246m background agents to finish[39m
-
-[38;5;114m●[39m Agent "DNS resolution mechanics explanation" finished[38;5;246m · 4s[39m
-
-[38;5;231m●[39m DNS agent complete. Waiting for the other three.
-
-[38;5;246m✻[39m [38;5;246mWaiting for [1m3[0m[38;5;246m background agents to finish[39m
-
-[38;5;114m●[39m Agent "Event sourcing vs CRUD analysis" finished[38;5;246m · 6s[39m
-
-[38;5;231m●[39m Event sourcing agent done. Two more pending.
-
-[38;5;246m✻[39m [38;5;246mWaiting for [1m2[0m[38;5;246m background agents to finish[39m
-
-[38;5;244m────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
-[39m❯ 
-[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-[39m  [38;5;246m⏸ manual mode on · /tasks to see subagents · ← for agents · ↓ to manage[39m                                  [38;5;114m/rc[39m
-
-[1m  ● main[0m
-[38;5;246m  ◯ [39mFandorin  [38;5;246mFlaky CI login test root cause[39m                                               [38;5;246m6s · ↑ 25.6k tokens[39m
-[38;5;246m [39m [38;5;246m◯[39m Scalia    [38;5;246mBackoff-less retry loop review[39m                                               [38;5;246m5s[39m [38;5;246m·[39m [38;5;246m↑[39m [38;5;246m25.5k[39m [38;5;246mtokens[39m
-
-
+[38;5;231m●[39m Four agents reading in [2m╭─────────────────────╮[48;5;235m│[0m[48;5;235m                                                                                                   [38;5;246m✕[39m
+[49m  cache.txt, parser.txt, [2m│[0m [38;5;246mnamed-subagents-mod[39m [2m│[48;5;235m│[0m[48;5;235m  [38;5;174m✻ [1m[39mAgents[0m[38;5;246m[48;5;235m · Haiku 4.5[39m                                                                     [38;5;246m4 done[39m
+[49m  report their two-senten[2m│[0m ✓ 2 agents finished [2m│[48;5;235m│[0m[48;5;235m
+[49m  complete.              [2m╰─────────────────────╯[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mBasquiat  [38;5;246mRead and summarize retry.txt desi…[39m  [38;5;246mdone[39m                     [38;5;246m   1 tool    52.4k[39m     [38;5;246m6s[39m
+[49m            [2m╭──────────────────────────────────╮[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mEames     [38;5;246mRead and summarize cache.txt desi…[39m  [38;5;246mdone[39m                     [38;5;246m   1 tool    52.4k[39m     [38;5;246m5s[39m
+[38;5;246m[49m✻[39m [38;5;246mWaiting fo[2m[39m│[0m [38;5;246mnamed-subagents-mod[39m              [2m│[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mPaulRand  [38;5;246mRead and summarize parser.txt des…[39m  [38;5;246mdone[39m                     [38;5;246m   1 tool    52.5k[39m     [38;5;246m6s[39m
+[49m            [2m│[0m ✓ PaulRand done · 6s · Read and  [2m│[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mMucha     [38;5;246mRead and summarize queue.txt desi…[39m  [38;5;246mdone[39m                     [38;5;246m   1 tool    52.6k[39m     [38;5;246m6s[39m
+[38;5;114m[49m●[39m Agent "Rea[2m│[0m summarize parser.txt design      [2m│[48;5;235m│[0m[48;5;235m
+[49mfinished[38;5;246m · 5[2m[39m╰──────────────────────────────────╯[48;5;235m│[0m[48;5;235m
+[49m     [2m╭─────────────────────────────────────────╮[48;5;235m│[0m[48;5;235m
+[38;5;231m[49m●[39m [1mret[0;2m│[0m [38;5;246mnamed-subagents-mod[39m                     [2m│[48;5;235m│[0m[48;5;235m
+[49m  exp[2m│[0m ✓ Mucha done · 6s · Read and summarize  [2m│[48;5;235m│[0m[48;5;235m
+[49m  del[2m│[0m queue.txt design                        [2m│[48;5;235m│[0m[48;5;235m
+[49m  ide[2m╰─────────────────────────────────────────╯[48;5;235m│[0m[38;5;246m[48;5;235m╷ [39m
+[49m  consistency.                                  [2m[48;5;235m│[0m[38;5;246m[48;5;235m│ [39m
+[49m                                                [2m[48;5;235m│[0m[38;5;246m[48;5;235m▸ [39m
+[49m  Waiting for cache.txt, parser.txt, and        [2m[48;5;235m│[0m[38;5;246m[48;5;235m│ [39m
+[49m  queue.txt summaries...                        [2m[48;5;235m│[0m[38;5;246m[48;5;235m╵ [39m
+[49m                                                [2m[48;5;235m│[0m[48;5;235m
+[38;5;246m[49m✻[39m [38;5;246mWaiting for [1m3[0m[38;5;246m background agents to finish[39m     [2m[48;5;235m│[0m[48;5;235m
+[49m                                                [2m[48;5;235m│[0m[48;5;235m
+[38;5;114m[49m●[39m Agent "Read and summarize cache.txt design"   [2m[48;5;235m│[0m[48;5;235m
+[49mfinished[38;5;246m · 5s[39m                                   [2m[48;5;235m│[0m[48;5;235m
+[49m                                                [2m[48;5;235m│[0m[48;5;235m
+[38;5;114m[49m●[39m Agent "Read and summarize parser.txt design"  [2m[48;5;235m│[0m[48;5;235m  [38;5;246m── timeline ──────────────────────────────────────────────────────────────────────────────────────[39m
+[49mfinished[38;5;246m · 5s[39m                                   [2m[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mBasquiat [38;5;246m [38;5;114m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[38;5;246m··················      6s[39m
+[49m                                                [2m[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mEames    [38;5;246m ······[38;5;114m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[38;5;246m··················      5s[39m
+[38;5;174m[49m·[39m [38;5;174mShenaniganing… [38;5;246m(1s · [38;5;247mthinking[38;5;246m)[39m                [2m[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mPaulRand [38;5;246m ············[38;5;114m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[38;5;246m·········      6s[39m
+[38;5;246m[49m  ⎿  Tip: Use /statusline to set up a custom [39m   [2m[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [39mMucha    [38;5;246m ··················[38;5;114m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[38;5;246m      6s[39m
+[49m     [38;5;246mstatus line that will display beneath the [39m [2m[48;5;235m│[0m[48;5;235m  [38;5;114m✓ [38;5;246m4 done in 8s · 24s of agent time (2.9× in parallel) · 4 tool uses · 210k tokens[39m
+[49m     [38;5;246minput box[39m                                  [2m[48;5;235m│[0m[48;5;235m  [38;5;246mclick an agent to open it · click "done" to hide finished ones[39m
+[49m                                                [2m[48;5;235m│[0m[48;5;235m
+[38;5;244m[49m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
+[38;5;246m❯ [39m
+[38;5;244m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[39m  [38;5;246m⏸ manual mode on · /tasks to see subagents · esc to interrupt · ← for agents[39m

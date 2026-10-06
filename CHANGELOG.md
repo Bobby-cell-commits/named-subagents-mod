@@ -40,9 +40,10 @@ One install now gives the names and a pane that lists the agents under them.
   at upstream `17be889`.
 - `probes/pane-fold/`: what the engine allows of one plugin (one hooks module, an event hooked once,
   `$` kept inside a file), and the live captures.
-- A demo GIF at the top of the README (`assets/demo.gif`): names in the task tree, then `/names set` and
-  `/names use` and a second fan-out drawing from that set. `scripts/capture_demo.sh` records it and
-  `scripts/render_tree_gif.py` draws it. Recorded on 0.2.0, before the pane.
+- A demo GIF at the top of the README (`assets/demo.gif`): a fan-out with the pane docked beside the
+  transcript and the same names in the task tree, then `/names set` and `/names use` and a second fan-out
+  drawing from that set. `scripts/capture_demo.sh` records it (150 columns, the fullscreen layout) and
+  `scripts/render_tree_gif.py` draws the whole screen, choosing frames by rule so any recording will do.
 
 ### Changed
 - `hooks/hooks.json` names `./index.ts`, which registers naming and then the pane. `session.start` and

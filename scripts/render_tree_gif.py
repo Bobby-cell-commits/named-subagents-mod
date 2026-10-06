@@ -4,25 +4,29 @@ Capture (a private tmux server, fresh session, this checkout loaded with --plugi
     bash scripts/capture_demo.sh <scratch_project_dir> rec
 which is, in short:
     T="tmux -L nsdemo -f /dev/null"
-    $T new-session -d -s d -x 112 -y 34 -c "$DIR"; $T set -s focus-events on
+    $T new-session -d -s d -x 150 -y 36 -c "$DIR"; $T set -s focus-events on
     $T send-keys -t d "claude --model haiku --setting-sources project,local --plugin-dir ." Enter
     $T send-keys -t d -l "<prompt>"; $T capture-pane -e -p -t d > rec/f001-s1-typed.ans
     $T send-keys -t d Enter
-    for i in $(seq 1 70); do sleep 0.5; $T capture-pane -e -p -t d > rec/fNNN-s1.ans; done
-then the same for "/names set …", "/names use …" and the second prompt.
+    until the task tree is empty: sleep 0.5; $T capture-pane -e -p -t d > rec/fNNN-s1.ans
+then the same for "/names set …", "/names use …" and the second prompt. $DIR has the
+fullscreen layout set, so the agents pane docks beside the transcript.
 Render:
     python3 scripts/render_tree_gif.py rec assets/demo.gif
-The frame list near the bottom picks which captured frames to use, by number, so it fits one
-recording only. That recording is kept in assets/demo-frames (the session link, the home path
-and the shell line above the banner removed), so the GIF can be redrawn without a new session:
+Keep the recording, so the GIF can be redrawn without a new session:
+    python3 scripts/render_tree_gif.py rec assets/demo.gif --keep assets/demo-frames
     python3 scripts/render_tree_gif.py assets/demo-frames assets/demo.gif
+The frames are chosen by rule from each file's name (fNNN-<scene>.ans), so any recording the
+capture script makes will do: a typed line and a /names answer are held, a running scene is
+every third frame (STEP), and the first frame with every agent of a scene in the task tree
+and the last frame are held longer.
 The title bar's version is read from .claude-plugin/plugin.json.
 Fonts: JetBrains Mono NL Nerd Font, DejaVu Sans, Noto Color Emoji.
 
-Keeps only real captured lines: the transcript region (above the input box) and
-the task-tree rows (from '● main' down). The banner (path, session link), the shell
-line that started the session and the status line (usage, paths) are left out, and the
-home directory in a printed path reads `~`. Frame timing is chosen for readability.
+Draws the whole captured screen: the transcript, the agents pane, the prompt and the task
+tree, each cell as tmux gave it. Two things are taken out, here and in the kept frames: the
+banner (the plan, the folder's path, the session link) is blanked, and the home directory in
+a printed path reads `~`. Frame timing is chosen for readability.
 """
 
 import json
@@ -33,7 +37,8 @@ import unicodedata
 from PIL import Image, ImageDraw, ImageFont
 
 SRC, DST = sys.argv[1], sys.argv[2]
-COLS, TOP_ROWS = 112, 14
+KEEP = sys.argv[sys.argv.index("--keep") + 1] if "--keep" in sys.argv else None
+STEP = int(os.environ.get("STEP", 3))
 FONT = "/home/bogdan/.local/share/fonts/JetBrainsMonoNF/JetBrainsMonoNLNerdFontMono-Regular.ttf"
 BOLD = FONT.replace("Regular", "Bold")
 EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
@@ -137,41 +142,43 @@ def plain(cells):
     return "".join(c[0] for c in cells)
 
 
-def tilde(cells):
-    """The home directory in a printed path, shortened to `~`."""
-    while (at := plain(cells).find(HOME)) >= 0:
-        cells = cells[:at] + [("~",) + cells[at][1:]] + cells[at + len(HOME) :]
-    return cells
-
-
-def select(path):
-    state = [FG, False, False, None]
-    rows = [tilde(parse(ln, state)) for ln in open(path, encoding="utf-8").read().split("\n")]
-    txt = [plain(r) for r in rows]
-    seps = [i for i, t in enumerate(txt) if t.startswith("────")]
-    first_sep = seps[0] if seps else len(rows)
-    # While the banner is still on screen, the shell line that started the session is above it.
-    start = max((i + 1 for i, t in enumerate(txt[:first_sep]) if re.match(r"\s*▝▝", t)), default=0)
-    top = [
-        r
-        for r, t in zip(rows[start:first_sep], txt[start:first_sep])
-        if t.strip() and not re.match(r"\s*(▐▛|▝▜|▝▝)", t) and "tmux detected" not in t and "Tip:" not in t
-    ]
-    top = top[-TOP_ROWS:]
-    box = rows[seps[0] : seps[1] + 1] if len(seps) >= 2 else []
-    tree_i = next((i for i, t in enumerate(txt) if t.strip() == "● main"), None)
-    tree = [r for r in rows[tree_i:] if plain(r).strip()] if tree_i is not None else []
-    return top, box, tree
-
-
 def width(ch):
     if unicodedata.category(ch) in ("Mn", "Cf") or ch == "\ufe0f":
         return 0
     return 2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1
 
 
+BANNER = re.compile(r"\s*(▐▛|▝▜|▝▝)")
+ESC = re.compile(r"\x1b\[[0-9;:]*m")
+
+
+def clean(text):
+    """A captured screen with what a reader should not get taken out, every column where it
+    was: the banner's three lines are blanked up to the pane's edge (or a toast's), and the
+    home directory in a path reads `~`, the spaces it saves put back after the path."""
+    out = []
+    for raw in OSC.sub("", text).split("\n"):
+        if BANNER.match(ESC.sub("", raw)):
+            at = raw.find("│")
+            head, tail = (raw, "") if at < 0 else (raw[:at], raw[at:])
+            # plain blanks, then the colour changes the blanked text made, for what follows it
+            raw = "\x1b[0m" + " " * sum(width(c) for c in ESC.sub("", head)) + "".join(ESC.findall(head)) + tail
+        raw = re.sub(re.escape(HOME) + r"(\S*)", lambda m: "~" + m.group(1) + " " * (len(HOME) - 1), raw)
+        out.append(raw)
+    return "\n".join(out)
+
+
+def screen(path):
+    """-> the frame's rows of cells, and how many agents its task tree names."""
+    state = [FG, False, False, None]
+    rows = [parse(ln, state) for ln in clean(open(path, encoding="utf-8").read()).split("\n")]
+    while rows and not plain(rows[-1]).strip():
+        rows.pop()
+    return rows, sum(1 for r in rows if plain(r).lstrip().startswith("◯"))
+
+
 def is_emoji(ch):
-    return ord(ch) >= 0x2300 and ch not in "─│├└┌┐┘┬┴┼●◯○❯·✻✢✽✶✳⎿▐▛▝▜█▀↓↑⏵⏸►…—–"
+    return ord(ch) >= 0x1F000
 
 
 def draw(frame_rows, H):
@@ -212,6 +219,9 @@ def draw(frame_rows, H):
                 w = 2
             elif ch == "⎿":  # in no installed text font: two strokes
                 d.line([x + 3, y + 4, x + 3, y + CH - 8, x + CW - 1, y + CH - 8], fill=fg, width=1)
+            elif ch == "⏸":  # nor is this: two bars
+                for bx in (x + 1, x + 5):
+                    d.rectangle([bx, y + 6, bx + 1, y + CH - 7], fill=fg)
             elif ch != " ":
                 d.text((x, y), ch, fill=fg, font=symfont if ch in SYM - {"·"} else (bold if b else font))
             x += CW * w
@@ -220,33 +230,47 @@ def draw(frame_rows, H):
     return img
 
 
-# Scene 1: the prompt, the tree filling to four names and thinning as agents finish.
-# Scene 2: /names set, /names use, the second prompt, the tree filling from the new set.
-PICK = [1, *range(9, 22), 72, 76, 77, 81, 82, *range(88, 96)]
-HOLD = {1: 1800, 72: 1500, 76: 2200, 77: 1200, 81: 2200, 82: 1800}  # typed lines and /names answers
-by_n = {int(n[1:4]): os.path.join(SRC, n) for n in os.listdir(SRC) if re.match(r"f\d{3}.*\.ans$", n)}
-files = [(n, by_n[n]) for n in PICK]
-sel = [select(f) for _, f in files]
-n_rows = max(len(t) + len(b) + 1 + len(tr) for t, b, tr in sel)
-H = TITLE_H + PAD_Y * 2 + CH * n_rows
-named = lambda tree: sum(1 for r in tree if plain(r).lstrip().startswith("◯"))
-full = max(named(tr) for _, _, tr in sel[: PICK.index(72)]), max(named(tr) for _, _, tr in sel[PICK.index(72) :])
+# Scene 1: the prompt, the pane opening and its roster filling with the tree's four names, the batch's
+# receipt. Scene 2: /names set, /names use, the second prompt, the roster filling from the new set.
+found = sorted((int(m[1]), m[2], os.path.join(SRC, n)) for n in os.listdir(SRC) if (m := re.match(r"f(\d{3})-(.+)\.ans$", n)))
+if KEEP:
+    os.makedirs(KEEP, exist_ok=True)
+    for _, _, f in found:
+        open(os.path.join(KEEP, os.path.basename(f)), "w", encoding="utf-8").write(clean(open(f, encoding="utf-8").read()))
+shots = [(tag, *screen(f)) for _, tag, f in found]
+full = {tag: max(named for t, _, named in shots if t == tag) for tag in ("s1", "s2")}
+last_of = {tag: i for i, (tag, _, _) in enumerate(shots)}
+picked, seen_full = [], set()
+for i, (tag, rows, named) in enumerate(shots):
+    hold = None
+    if tag.endswith("-typed"):
+        hold = 1800 if tag in ("s1-typed", "s2-typed") else 1200
+    elif tag in ("set", "use"):
+        hold = 2200 if i == last_of[tag] else None
+    else:
+        first_full = named == full[tag] and tag not in seen_full
+        if first_full:
+            seen_full.add(tag)
+        since = sum(1 for t, _, _ in shots[:i] if t == tag)
+        if first_full or since % STEP == 0 or i == last_of[tag]:
+            hold = 1800 if first_full else 2500 if i == last_of[tag] else 450
+    if hold:
+        picked.append((rows, hold))
+COLS = max(sum(width(c[0]) for c in r) for rows, _ in picked for r in rows)
+H = TITLE_H + PAD_Y * 2 + CH * max(len(rows) for rows, _ in picked)
 frames, durs, last = [], [], None
-for (n, _), (top, box, tree) in zip(files, sel):
-    rows = top + box + ([[]] if tree else []) + tree
+for rows, hold in picked:
     key = "\n".join(plain(r) for r in rows)
     if key == last:
-        durs[-1] += 500
+        durs[-1] += hold
         continue
     last = key
     frames.append(draw(rows, H))
-    durs.append(HOLD.get(n, 500))
-    if named(tree) == full[n >= 72]:  # every agent of the scene is in the tree
-        durs[-1] = max(durs[-1], 1600)
+    durs.append(hold)
 durs[-1] = 3500
 # One shared palette for every frame: the text is a dozen colours and their blends with the background.
 pal = Image.new("RGB", (frames[0].width, H * 2))
-pal.paste(frames[PICK.index(16) if 16 in PICK else 0], (0, 0))
+pal.paste(frames[len(frames) // 3], (0, 0))
 pal.paste(frames[-1], (0, H))
 pal = pal.quantize(colors=COLOURS, method=Image.MEDIANCUT, dither=Image.NONE)
 frames = [f.quantize(palette=pal, dither=Image.NONE) for f in frames]

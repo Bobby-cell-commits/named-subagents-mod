@@ -10,16 +10,16 @@ conversation a press away (see [The agents pane](#the-agents-pane)).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/Bobby-cell-commits/named-subagents-mod/master/assets/demo.gif"
-       alt="A Claude Code 2.1.291 session: four subagents fan out and the task tree shows them as Timur, Edison, Fandorin and Scalia; after /names set pirates and /names use pirates the next three are Teach, Kidd and Rackham"
-       width="760">
+       alt="A Claude Code 2.1.292 session in the fullscreen layout, 150 columns: four subagents fan out and the agents pane opens beside the transcript, listing them as Basquiat, Eames, PaulRand and Mucha with what each is reading, its tool count, tokens and clock; the task tree under the prompt shows the same four names; after /names set pirates and /names use pirates the next three are Bonny, Kidd and Teach, and the pane ends on a receipt for all seven">
 </p>
 
 The GIF is a real session, not a mock-up: `scripts/capture_demo.sh` drives Claude Code in tmux and saves
-the screen twice a second, and `scripts/render_tree_gif.py` draws the chosen frames (the transcript and
-the task tree; the banner and status line are left out, and a frame with something to read is held longer).
-It was recorded on 0.2.0, before the pane, in a 112-column terminal: at that width 0.3.0 adds a line
-under the prompt counting the running agents and a toast as each finishes, and the pane itself opens from
-144 columns (or when you type `/roster`).
+the screen twice a second, and `scripts/render_tree_gif.py` draws the whole screen for some of those
+frames, holding the ones with something to read. Two things are taken out: the banner is blanked and the
+home directory in a path reads `~`. It was recorded on 0.3.0 in a 150-column terminal in the fullscreen
+layout (`/tui fullscreen`), where the pane docks beside the transcript and opens by itself. In a terminal
+under 144 columns you get a line under the prompt counting the running agents and a toast as each
+finishes, and `/roster` opens the pane.
 
 It is a Claude Code mod (function hooks), so it needs **Claude Code 2.1.287 or later** and nothing
 else: no Python, no Node at runtime. It replaces the retired
