@@ -87,6 +87,12 @@ a letter or digit, up to 64 characters, and refuses the whole dispatch for anyth
 cleaned on the way in: `Mary Shelley` becomes `MaryShelley`, `Zoë` becomes `Zoe`, `O'Brien` becomes
 `OBrien`. A name with nothing usable in it (`名前`, an emoji) is skipped and reported.
 
+**Limits.** A names file is read as untrusted input, since a project's arrives with the repository. A
+file over 256 KB is not read. A list holds up to 2,000 names, a file up to 100 sets, and a set up to 200
+`for` or `keywords` entries; what is over is left out and reported. Anything quoted from a file in a
+warning or in `/names` output has its control characters replaced, so a file cannot send escape sequences
+to your terminal. A name holding a control character is skipped.
+
 **When a file is wrong.** A file that is not valid JSON, a name that cannot be used, or an unknown key
 raises a toast and a status line once per change of the file; everything else in the file still applies,
 and agents are always named. `/names` lists the problems, and will not edit a file it cannot read in
@@ -125,8 +131,8 @@ full, because rewriting it would drop the unread part; `/names reset` starts cle
 ## Checks
 ```bash
 node scripts/gen_pool.mjs --check   # pool matches the registry
-node --test spec/*.spec.ts          # draw and custom-names logic, plain node 22.18+ (52 tests)
-claude plugin test .                # hooks against the engine's test kit (29 tests)
+node --test spec/*.spec.ts          # draw and custom-names logic, plain node 22.18+ (57 tests)
+claude plugin test .                # hooks against the engine's test kit (33 tests)
 claude plugin validate .
 ```
 CI runs the two node checks; the two `claude` checks need a local Claude Code.

@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import { categoryFor, drawName, pickName, type Pool } from '../hooks/draw.ts';
 import { POOL } from '../hooks/pool.ts';
 import {
-  NAME_RE, applyCustom, cleanName, editCustom, emptyCustom, mergeCustom, parseCustom, parseImport,
-  serializeCustom, tokenize, type Custom,
+  LIMITS, NAME_RE, applyCustom, cleanName, editCustom, emptyCustom, mergeCustom, parseCustom, parseImport,
+  printable, serializeCustom, tokenize, type Custom,
 } from '../hooks/custom.ts';
 
 const base: Pool = {
@@ -40,6 +40,8 @@ test('cleanName gives nothing for a name with no usable character', () => {
   assert.equal(cleanName('名前'), undefined);
   assert.equal(cleanName('🚀'), undefined);
   assert.equal(cleanName('   '), undefined);
+  assert.equal(cleanName('\u001b[31mEvil'), undefined); // an escape sequence is not salvaged into "31mEvil"
+  assert.equal(cleanName('line1\nline2'), undefined);
 });
 
 test('cleanName caps the length so a numbered suffix still fits', () => {
@@ -161,7 +163,7 @@ test('use resolves to a pool that exists, or is reported and dropped', () => {
 });
 
 test('everything applyCustom can produce fits the name rule', () => {
-  const p = parseCustom(JSON.stringify({ names: ['Mary Shelley', "O'Brien", 'x@y.z', '<b>bold</b>', 'B'.repeat(200)], rename: { Hopper: 'Grace Hopper' }, sets: { s: ['line1\nline2', '#hash tag!'] } }), 'f');
+  const p = parseCustom(JSON.stringify({ names: ['Mary Shelley', "O'Brien", 'x@y.z', '<b>bold</b>', 'B'.repeat(200)], rename: { Hopper: 'Grace Hopper' }, sets: { s: ['two  words', '#hash tag!'] } }), 'f');
   const { pool } = applyCustom(base, [{ label: 'f', custom: p.custom }]);
   assert.deepEqual(pool.categories.flatMap(c => c.names).filter(n => !NAME_RE.test(n)), []);
 });
@@ -276,4 +278,53 @@ test('a problem quotes at most a short piece of a bad entry', () => {
   const p = parseCustom(JSON.stringify({ names: ['名'.repeat(200000)] }), 'f');
   assert.equal(p.problems.length, 1);
   assert.ok(p.problems[0]!.length < 200, String(p.problems[0]!.length));
+});
+
+// ---- a names file is untrusted input: a project's comes with the repository ----
+
+const CONTROL = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f‪-‮⁦-⁩]/;
+
+test('nothing read from a file reaches a message with a control character in it', () => {
+  const esc = '\u001b]0;owned\u0007\u001b[31m';
+  const p = parseCustom(JSON.stringify({
+    names: [`${esc}Evil Name`, `${esc}名前`, 7], use: `${esc}pool`, [`${esc}key`]: 1, only: `${esc}`,
+    remove: `${esc}`, rename: { [`${esc}名`]: 'x', [`${esc}Old`]: 5 },
+    sets: { [`${esc}set`]: ['A'], ok: { [`${esc}k`]: 1, names: [`${esc}B C`], for: `${esc}`, replace: `${esc}` } },
+  }), `file${esc}`);
+  const said = [...p.problems, ...p.cleaned];
+  assert.ok(said.length >= 8, String(said.length));
+  assert.deepEqual(said.filter(t => CONTROL.test(t)), []);
+  const edit = editCustom(emptyCustom(), 'add', [`${esc}Evil Name`, `${esc}名前`], base);
+  assert.deepEqual(edit.lines.filter(t => CONTROL.test(t)), []);
+  assert.equal(CONTROL.test(printable(`a${esc}b‮c`)), false);
+});
+
+test('invalid JSON is reported without echoing the file', () => {
+  const p = parseCustom('{ "names": [\u001b[31m', 'f');
+  assert.deepEqual(p.problems.filter(t => CONTROL.test(t)), []);
+});
+
+test('`use` must look like a pool name', () => {
+  const p = parseCustom(JSON.stringify({ use: 'my pool; rm -rf' }), 'f');
+  assert.equal(p.custom.use, undefined);
+  assert.equal(p.problems.length, 1);
+});
+
+test('a file over the size limit is not parsed at all', () => {
+  const p = parseCustom(JSON.stringify({ names: ['Ripley'], pad: 'x'.repeat(LIMITS.fileChars) }), 'f');
+  assert.deepEqual(p.custom, emptyCustom());
+  assert.match(p.problems[0]!, /too large/);
+});
+
+test('lists, sets and problems are capped, and the cap is reported', () => {
+  const many = Array.from({ length: LIMITS.names + 500 }, (_, i) => `N${i}`);
+  const p = parseCustom(JSON.stringify({ names: many, remove: many, sets: Object.fromEntries(Array.from({ length: LIMITS.sets + 50 }, (_, i) => [`s${i}`, ['A']])) }), 'f');
+  assert.equal(p.custom.names.length, LIMITS.names);
+  assert.equal(p.custom.remove.length, LIMITS.names);
+  assert.equal(Object.keys(p.custom.sets).length, LIMITS.sets);
+  assert.ok(p.problems.some(t => t.includes('names') && t.includes(String(LIMITS.names))));
+  assert.ok(p.problems.some(t => t.includes('sets') && t.includes(String(LIMITS.sets))));
+  const noisy = parseCustom(JSON.stringify(Object.fromEntries(Array.from({ length: 500 }, (_, i) => [`k${i}`, 1]))), 'f');
+  assert.equal(noisy.problems.length, LIMITS.problems + 1);
+  assert.match(noisy.problems.at(-1)!, /and 480 more/);
 });

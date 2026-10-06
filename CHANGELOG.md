@@ -19,6 +19,8 @@ Your own names: add some, change the built-in ones, or bring a whole set.
 - Names are cleaned to what the Agent tool accepts (`Mary Shelley` becomes `MaryShelley`); a name that
   cannot be used is skipped and reported. A wrong file raises a toast and a status line once per change
   and never leaves an agent unnamed.
+- A names file is treated as untrusted input: a size limit checked before the read (256 KB), caps on
+  names, sets and routes, and control characters replaced in every warning and in `/names` output.
 - `examples/pirates.json`, `probes/custom-names-probe/` (the three probes behind the design, and the
   live proof).
 

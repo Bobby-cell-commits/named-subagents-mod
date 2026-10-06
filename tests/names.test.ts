@@ -8,6 +8,7 @@ type World = {
   files?: Record<string, string>; // path -> text: the names files the mod reads and /names writes
   writes?: number;
   root?: string; // the session root; '/proj' unless given
+  read?: string[]; // every path the mod read
 };
 const USER = '/home/t/.claude/named-subagents.json';
 const PROJECT = '/proj/.claude/named-subagents.json';
@@ -32,6 +33,7 @@ function engine(top: any, on: On, w: World) {
     return { value: { kind: 'file', size: text.length, mtimeMs: 1000 + (w.writes ?? 0), isLink: false } } as never;
   });
   on('fs.read', ($, e) => {
+    (w.read ??= []).push(e.path);
     const text = files[e.path];
     if (text === undefined) throw new Error(`read ${e.path} failed: ENOENT`);
     return { value: text } as never;
@@ -322,6 +324,51 @@ test('/names import drops a `use` that names no pool, and says so', async ($, on
   const r = await names($, 'import /tmp/set.json');
   expect(JSON.parse(w.files![USER]!)).toEqual({ names: ['Neo'] });
   expect(r.text).toContain('nope');
+});
+
+// ---- a names file is untrusted input ----
+
+const ESC = '\u001b]0;owned\u0007\u001b[31m';
+const CONTROL = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f‪-‮⁦-⁩]/;
+
+test("a project's names file cannot put control characters in a toast or in /names output", async ($, on) => {
+  const w: World = { list: [], names: [], toasts: [], files: { [PROJECT]: JSON.stringify({ [`${ESC}key`]: 1, names: [`${ESC}名前`, `${ESC}Evil Name`], use: `${ESC}x` }) } };
+  engine($, on, w);
+  await call($, 'say ok');
+  expect(w.toasts.length).toBe(1);
+  expect(CONTROL.test(w.toasts[0]!)).toBe(false);
+  const listed = await names($, '');
+  expect(listed.text).toContain('Problems:');
+  expect(CONTROL.test(listed.text!)).toBe(false);
+});
+
+test('a names file over the size limit is not read; the agent gets a built-in name and one toast', async ($, on) => {
+  const { POOL } = await import_pool();
+  const w: World = { list: [], names: [], toasts: [], files: { [PROJECT]: JSON.stringify({ only: true, names: ['Ripley'], pad: 'x'.repeat(300 * 1024) }) } };
+  engine($, on, w);
+  await call($, 'say ok');
+  await call($, 'say ok');
+  expect(w.read ?? []).toEqual([]);
+  expect(POOL.categories.flatMap(c => c.names)).toContain(w.names[0]);
+  expect(w.toasts.length).toBe(1);
+  expect(w.toasts[0]).toContain('too large');
+});
+
+test('/names import refuses a file over the size limit', async ($, on) => {
+  const w: World = { list: [], names: [], toasts: [], files: { '/tmp/big.txt': 'Ripley\n'.repeat(60000) } };
+  engine($, on, w);
+  const r = await names($, 'import /tmp/big.txt');
+  expect(r.text).toContain('too large');
+  expect(w.files![USER]).toBe(undefined);
+});
+
+test('/names lists a long set in part, with a count', async ($, on) => {
+  const many = Array.from({ length: 400 }, (_, i) => `N${i}`);
+  const w: World = { list: [], names: [], toasts: [], files: { [USER]: JSON.stringify({ names: many }) } };
+  engine($, on, w);
+  const listed = await names($, '');
+  expect(listed.text).toContain('(+350 more)');
+  expect(listed.text!.length < 4000).toBe(true);
 });
 
 import { POOL as _POOL } from '../hooks/pool.ts';

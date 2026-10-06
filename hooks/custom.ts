@@ -16,6 +16,7 @@ const FALLBACK = 'default';
  * words joined ("Mary Shelley" -> "MaryShelley"). Undefined when nothing usable is left.
  */
 export function cleanName(raw: string): string | undefined {
+  if (/[\u0000-\u001f\u007f-\u009f]/.test(raw.trim())) return undefined; // no name holds a control character; not worth salvaging
   const parts = raw.normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/['’`]/g, '')
     .split(/[^A-Za-z0-9_-]+/).filter(p => p !== '');
   const joined = parts.map((p, i) => (i === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1))).join('')
@@ -47,14 +48,36 @@ function uniq(names: string[]): string[] {
   const seen = new Set<string>();
   return names.filter(n => !seen.has(lower(n)) && !!seen.add(lower(n)));
 }
-/** A bad entry as a problem quotes it: short, whatever its size. */
-const quote = (v: unknown) => { const t = typeof v === 'string' ? v.trim() : JSON.stringify(v) ?? String(v); return `"${t.length > 40 ? `${t.slice(0, 40)}…` : t}"`; };
+/**
+ * A names file is untrusted input (a project's arrives with the repository), so what is read
+ * from one is bounded: the file's size, how many names, sets and routes it may hold, and how
+ * many problems are kept to report.
+ */
+export const LIMITS = { fileChars: 256 * 1024, names: 2000, sets: 100, routes: 200, problems: 20 } as const;
+
+/**
+ * Text safe to show in a terminal: control characters (escape sequences among them) and the
+ * characters that reorder text become "?". Newlines stay.
+ */
+export const printable = (s: string) => s.replace(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '?');
+
+/** A bad entry as a problem quotes it: short, on one line, and printable, whatever it held. */
+const quote = (v: unknown) => {
+  const t = printable(typeof v === 'string' ? v : JSON.stringify(v) ?? String(v)).replace(/\s+/g, ' ').trim();
+  return `"${t.length > 40 ? `${t.slice(0, 40)}…` : t}"`;
+};
+/** At most LIMITS.problems lines, each printable; the rest are counted. */
+function bounded(lines: string[], label: string, what: string): string[] {
+  const safe = lines.slice(0, LIMITS.problems).map(t => printable(t).replace(/\n/g, ' '));
+  return lines.length > LIMITS.problems ? [...safe, `${label}: and ${lines.length - LIMITS.problems} more ${what}`] : safe;
+}
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 /** A list of names from a JSON array of strings or one comma-separated string (or a list of those). */
 function nameList(v: unknown, where: string, p: Parsed): string[] {
-  const raw = typeof v === 'string' ? v.split(',') : Array.isArray(v) ? v.flatMap(x => (typeof x === 'string' ? x.split(',') : [x])) : undefined;
+  let raw = typeof v === 'string' ? v.split(',') : Array.isArray(v) ? v.flatMap(x => (typeof x === 'string' ? x.split(',') : [x])) : undefined;
   if (raw === undefined) { p.problems.push(`${where} must be a list of names`); return []; }
+  if (raw.length > LIMITS.names) { p.problems.push(`${where}: only the first ${LIMITS.names} names are read`); raw = raw.slice(0, LIMITS.names); }
   const out: string[] = [];
   for (const r of raw) {
     if (typeof r !== 'string') { p.problems.push(`${where}: ${quote(r)} is not a name`); continue; }
@@ -69,32 +92,43 @@ function nameList(v: unknown, where: string, p: Parsed): string[] {
 
 function textList(v: unknown, where: string, p: Parsed): string[] {
   if (!Array.isArray(v) || v.some(x => typeof x !== 'string')) { p.problems.push(`${where} must be a list of strings`); return []; }
-  return (v as string[]).map(s => s.trim()).filter(s => s !== '');
+  if (v.length > LIMITS.routes) p.problems.push(`${where}: only the first ${LIMITS.routes} entries are read`);
+  // Shown by /names and matched against agent types and task text: one printable line each.
+  return (v as string[]).slice(0, LIMITS.routes).map(s => printable(s).replace(/\s+/g, ' ').trim().slice(0, 64)).filter(s => s !== '');
 }
 
 /** A Custom from an already-parsed JSON value; what is wrong is listed, the rest is kept. */
-export function readCustom(value: unknown, label: string): Parsed {
+export function readCustom(value: unknown, rawLabel: string): Parsed {
+  const label = printable(rawLabel).replace(/\s+/g, ' ').slice(0, 120);
+  const p = readAll(value, label);
+  return { custom: p.custom, problems: bounded(p.problems, label, 'problems'), cleaned: bounded(p.cleaned, label, 'adjusted names') };
+}
+
+function readAll(value: unknown, label: string): Parsed {
   const p: Parsed = { custom: emptyCustom(), problems: [], cleaned: [] };
   if (!isRecord(value)) { p.problems.push(`${label}: expected a JSON object`); return p; }
   const c = p.custom;
   for (const [key, v] of Object.entries(value)) {
     const where = `${label}: ${key}`;
     if (key === 'only') { if (typeof v === 'boolean') c.only = v; else p.problems.push(`${where} must be true or false`); }
-    else if (key === 'use') { if (typeof v === 'string' && v.trim() !== '' && v.length <= 64) c.use = v.trim(); else p.problems.push(`${where} must be a pool's name`); }
+    else if (key === 'use') { if (typeof v === 'string' && NAME_RE.test(v.trim())) c.use = v.trim(); else p.problems.push(`${where} must be a pool's name`); }
     else if (key === 'names') c.names = nameList(v, where, p);
     else if (key === 'remove') c.remove = nameList(v, where, p);
     else if (key === 'rename') {
       if (!isRecord(v)) { p.problems.push(`${where} must map old names to new ones`); continue; }
-      for (const [from, to] of Object.entries(v)) {
+      const pairs = Object.entries(v);
+      if (pairs.length > LIMITS.names) p.problems.push(`${where}: only the first ${LIMITS.names} names are read`);
+      for (const [from, to] of pairs.slice(0, LIMITS.names)) {
         const [f] = nameList([from], where, p);
         const [t] = typeof to === 'string' ? nameList([to], where, p) : [];
         if (f !== undefined && t !== undefined) c.rename[f] = t;
-        else if (typeof to !== 'string') p.problems.push(`${where}: ${from} needs a new name`);
+        else if (typeof to !== 'string') p.problems.push(`${where}: ${quote(from)} needs a new name`);
       }
     } else if (key === 'sets') {
       if (!isRecord(v)) { p.problems.push(`${where} must map a set's name to its names`); continue; }
       for (const [setKey, s] of Object.entries(v)) {
-        const at = `${label}: sets.${setKey.slice(0, 40)}`;
+        if (Object.keys(c.sets).length >= LIMITS.sets) { p.problems.push(`${where}: only the first ${LIMITS.sets} sets are read`); break; }
+        const at = `${label}: sets.${setKey.slice(0, 40)}`; // used only once the key has passed NAME_RE
         if (!NAME_RE.test(setKey)) { p.problems.push(`${label}: sets: ${quote(setKey)} cannot name a set (letters, digits, _ and - only)`); continue; }
         const set: CustomSet = { names: [], for: [], keywords: [], replace: false };
         if (Array.isArray(s) || typeof s === 'string') set.names = nameList(s, at, p); // shorthand: just the names
@@ -116,12 +150,16 @@ export function readCustom(value: unknown, label: string): Parsed {
 
 /** A Custom from a names file's text. Invalid JSON is one problem and an empty Custom. */
 export function parseCustom(text: string, label: string): Parsed {
+  if (text.length > LIMITS.fileChars) return tooLarge(label);
   let value: unknown;
   try { value = JSON.parse(text); } catch (err) {
-    return { custom: emptyCustom(), problems: [`${label}: not valid JSON (${String(err instanceof Error ? err.message : err).slice(0, 80)})`], cleaned: [] };
+    const why = printable(String(err instanceof Error ? err.message : err)).replace(/\s+/g, ' ').slice(0, 80);
+    return { custom: emptyCustom(), problems: [`${printable(label).slice(0, 120)}: not valid JSON (${why})`], cleaned: [] };
   }
   return readCustom(value, label);
 }
+
+const tooLarge = (label: string): Parsed => ({ custom: emptyCustom(), problems: [`${printable(label).slice(0, 120)}: too large (over ${LIMITS.fileChars / 1024} KB); it was not read`], cleaned: [] });
 
 /** The file's text for a Custom: only the keys that say something. */
 export function serializeCustom(c: Custom): string {
@@ -330,6 +368,7 @@ export function mergeCustom(into: Custom, incoming: Custom): Custom {
 
 /** What an imported file holds: a names file, a JSON list of names, or one name per line. */
 export function parseImport(text: string, label: string): Parsed {
+  if (text.length > LIMITS.fileChars) return tooLarge(label);
   let value: unknown;
   try { value = JSON.parse(text); } catch { value = text.split(/\r?\n/); } // audit-allow: fail-loud — not JSON means a plain list, one name per line
   return readCustom(Array.isArray(value) ? { names: value } : value, label);

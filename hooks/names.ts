@@ -16,8 +16,8 @@ import type { Register, EngineInterface, PluginOptions } from 'claude-code';
 import { pickName, type Pool } from './draw.ts';
 import { POOL } from './pool.ts';
 import {
-  NAME_RE, USAGE, applyCustom, editCustom, emptyCustom, mergeCustom, parseCustom, parseImport, readCustom,
-  serializeCustom, tokenize, type Custom, type Layer, type Parsed,
+  LIMITS, NAME_RE, USAGE, applyCustom, editCustom, emptyCustom, mergeCustom, parseCustom, parseImport, printable,
+  readCustom, serializeCustom, tokenize, type Custom, type Layer, type Parsed,
 } from './custom.ts';
 
 const TAG = 'named-subagents';
@@ -37,7 +37,8 @@ function rand(): number {
 
 function alarm($: EngineInterface, text: string): void {
   // Toast plus status line: the toast fades, the status line stays until the next clean spawn.
-  const line = `${TAG}: ${text.length > 240 ? `${text.slice(0, 240)}…` : text}`;
+  const one = printable(text).replace(/\s+/g, ' '); // may quote a names file: one printable line
+  const line = `${TAG}: ${one.length > 240 ? `${one.slice(0, 240)}…` : one}`;
   void Promise.resolve($.ui.toast(line, { timeoutMs: 10000 })).catch(() => undefined); // audit-allow: fail-loud — the alarm itself has nowhere louder to report
   void Promise.resolve($.ui.status(line)).catch(() => undefined); // audit-allow: fail-loud — same
 }
@@ -67,12 +68,17 @@ async function readFile($: EngineInterface, path: string | undefined, label: str
   if (path === undefined) return NO_FILE;
   let sig = 'none';
   try {
+    let size = 0;
     if (await $.fs.exists(path)) {
       const st = await $.fs.stat(path);
       sig = `${st.mtimeMs}:${st.size}`;
+      size = st.size;
     }
     if (prev && prev.sig === sig) return prev;
-    return sig === 'none' ? { path, sig } : { path, sig, parsed: parseCustom(await $.fs.read(path), label) };
+    if (sig === 'none') return { path, sig };
+    // Checked before the read: a project's file is not ours, and nothing that large is a names file.
+    if (size > LIMITS.fileChars) return { path, sig, error: `${label}: ${path} is too large (over ${LIMITS.fileChars / 1024} KB) and was not read` };
+    return { path, sig, parsed: parseCustom(await $.fs.read(path), label) };
   } catch {
     // There, but not readable. Signed by what was seen, so the alarm is raised once, not per dispatch.
     return prev?.sig === `unreadable:${sig}` ? prev : { path, sig: `unreadable:${sig}`, error: `${label}: cannot read ${path}` };
@@ -128,14 +134,18 @@ async function read($: EngineInterface, options: PluginOptions, quiet: boolean):
 
 const count = (pool: Pool) => new Set(pool.categories.flatMap(c => c.names.map(n => n.toLowerCase()))).size;
 
+/** A list for /names: its first 50 entries, and how many more there are. */
+const some = (list: string[]) => `${list.slice(0, 50).join(', ')}${list.length > 50 ? ` (+${list.length - 50} more)` : ''}`;
+
 function describe(l: Loaded, at: Paths, options: PluginOptions, theme: string): string {
-  const file = (f: FileState, path?: string) => (path === undefined ? 'no location' : `${path} (${f.sig === 'none' ? 'not there yet' : f.error ? 'unreadable' : 'found'})`);
+  const file = (f: FileState, path?: string) => (path === undefined ? 'no location' : `${path} (${f.sig === 'none' ? 'not there yet' : f.error ? 'not read' : 'found'})`);
   const mine = (c?: Custom) => (c ? [
     ...(c.only ? ['    only: the names before this file are left out'] : []),
-    ...(c.names.length ? [`    names: ${c.names.join(', ')}`] : []),
-    ...(c.remove.length ? [`    never drawn: ${c.remove.join(', ')}`] : []),
-    ...Object.entries(c.rename).map(([f, t]) => `    renamed: ${f} -> ${t}`),
-    ...Object.entries(c.sets).map(([k, s]) => `    set ${k} (${s.names.length}): ${s.names.join(', ')}${s.for.length ? `; for ${s.for.join(', ')}` : ''}${s.keywords.length ? `; keywords ${s.keywords.join(', ')}` : ''}${s.replace ? '; replaces the built-in names' : ''}`),
+    ...(c.names.length ? [`    names: ${some(c.names)}`] : []),
+    ...(c.remove.length ? [`    never drawn: ${some(c.remove)}`] : []),
+    ...(Object.keys(c.rename).length ? [`    renamed: ${some(Object.entries(c.rename).map(([f, t]) => `${f} -> ${t}`))}`] : []),
+    ...Object.entries(c.sets).slice(0, 20).map(([k, s]) => `    set ${k} (${s.names.length}): ${some(s.names)}${s.for.length ? `; for ${some(s.for)}` : ''}${s.keywords.length ? `; keywords ${some(s.keywords)}` : ''}${s.replace ? '; replaces the built-in names' : ''}`),
+    ...(Object.keys(c.sets).length > 20 ? [`    (+${Object.keys(c.sets).length - 20} more sets)`] : []),
     ...(c.use !== undefined ? [`    use: ${c.use}`] : []),
   ] : []);
   const opt = optionLayers(options);
@@ -145,7 +155,7 @@ function describe(l: Loaded, at: Paths, options: PluginOptions, theme: string): 
     `Every agent draws from: ${pin ?? 'the pool that fits its type and task'}.`,
     `Your file:    ${file(l.user, at.user)}`, ...mine(l.user.parsed?.custom),
     `Project file: ${file(l.project, at.project)}`, ...mine(l.project.parsed?.custom),
-    ...(opt.first.length || opt.last.length ? [`Install screen: ${opt.first.length ? 'only my names; ' : ''}${opt.last[0]?.custom.names.join(', ') ?? ''}`] : []),
+    ...(opt.first.length || opt.last.length ? [`Install screen: ${opt.first.length ? 'only my names; ' : ''}${some(opt.last[0]?.custom.names ?? [])}`] : []),
     `Pools: ${l.pool.categories.map(c => `${c.key} ${c.names.length}`).join(' · ')}`,
     ...(l.problems.length ? ['Problems:', ...l.problems.map(p => `    ${p}`)] : []),
     ...[l.user.parsed, l.project.parsed].flatMap(p => (p?.cleaned.length ? [`Adjusted to fit the name rule: ${p.cleaned.join(', ')}`] : [])),
@@ -184,7 +194,10 @@ async function names($: EngineInterface, args: string, options: PluginOptions, t
     const home = (await $.env.get('HOME')) ?? (await $.env.get('USERPROFILE'));
     const path = src.startsWith('~/') && home ? `${home}/${src.slice(2)}` : src;
     let text: string;
-    try { text = await $.fs.read(path); } catch { return `Cannot read ${path}.`; }
+    try {
+      if ((await $.fs.stat(path)).size > LIMITS.fileChars) return `${path} is too large to be a names file (over ${LIMITS.fileChars / 1024} KB); nothing was imported.`;
+      text = await $.fs.read(path);
+    } catch { return `Cannot read ${path}.`; }
     const p = parseImport(text, src);
     const pools = [...Object.keys(before.sets), ...Object.keys(p.custom.sets), ...POOL.categories.map(c => c.key)];
     const badUse = p.custom.use !== undefined && !pools.some(k => k.toLowerCase() === p.custom.use?.toLowerCase()) ? p.custom.use : undefined;
@@ -225,9 +238,9 @@ export const register: Register = (on, options) => {
 
   on('command.run', { command: 'names' }, async ($, e) => {
     try {
-      return { text: await names($, e.args, options, theme) };
+      return { text: printable(await names($, e.args, options, theme)) }; // it quotes names files and typed paths
     } catch (err) {
-      return { text: `/names failed (${String(err).slice(0, 200)}). Your file was not changed unless a line above says so.` };
+      return { text: printable(`/names failed (${String(err).slice(0, 200)}). Your file was not changed unless a line above says so.`) };
     }
   });
 

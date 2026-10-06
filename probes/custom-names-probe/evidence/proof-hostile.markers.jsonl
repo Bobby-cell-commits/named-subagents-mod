@@ -1,0 +1,7 @@
+{"ts":"2026-10-06T17:48:16.771Z","hook":"session.start","version":{"version":"2.1.291","base":"2.1.291","builtAt":"2026-10-06T02:24:19Z"}}
+{"ts":"2026-10-06T17:48:20.337Z","hook":"agent.spawn","tool_use_id":"toolu_01Q2BLQkvC5cAYCRvv9NuV5c","spawnName":"Neo","agentId":"a0a964345c6155d4a","listName":"Neo","type":"general-purpose","description":"Reply with ok"}
+{"ts":"2026-10-06T17:48:20.744Z","hook":"agent.spawn","tool_use_id":"toolu_012gmTF5TCiV4meVaftwZ97T","spawnName":"Ripley","agentId":"a943315f674cd029e","listName":"Ripley","type":"general-purpose","description":"Reply with ok"}
+{"ts":"2026-10-06T17:48:21.174Z","hook":"agent.spawn","tool_use_id":"toolu_01At3ZzEVqFhGnSqLY8QZV1t","spawnName":"Ripley-2","agentId":"aa9ad4294b4d83530","listName":"Ripley-2","type":"general-purpose","description":"Reply with ok"}
+{"ts":"2026-10-06T17:48:21.815Z","hook":"turn.complete","agentId":"a0a964345c6155d4a","listName":"Neo","status":"idle"}
+{"ts":"2026-10-06T17:48:22.619Z","hook":"turn.complete","agentId":"aa9ad4294b4d83530","listName":"Ripley-2","status":"idle"}
+{"ts":"2026-10-06T17:48:23.191Z","hook":"turn.complete","agentId":"a943315f674cd029e","listName":"Ripley","status":"idle"}
