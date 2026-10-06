@@ -328,3 +328,37 @@ test('lists, sets and problems are capped, and the cap is reported', () => {
   assert.equal(noisy.problems.length, LIMITS.problems + 1);
   assert.match(noisy.problems.at(-1)!, /and 480 more/);
 });
+
+// ---- names you add are favoured, so a few of them still show up among ~30 built-in ones ----
+
+test('applyCustom marks the names you added to a built-in pool, and only those', () => {
+  const { pool } = applyCustom(base, [layer({
+    names: ['Ripley'], rename: { Ripley: 'Ellen' }, remove: ['Vega'],
+    sets: { code: { names: ['Neo'], for: [], keywords: [], replace: false }, pirates: { names: ['Kidd'], for: [], keywords: [], replace: false } },
+  })]);
+  const cat = (key: string) => pool.categories.find(c => c.key === key)!;
+  assert.deepEqual(cat('explore').favoured, ['Ellen']); // follows the rename
+  assert.deepEqual(cat('code').favoured, ['Neo', 'Ellen']);
+  assert.equal(cat('pirates').favoured, undefined); // a set of your own: every name is yours
+  assert.equal(cat('default').favoured, undefined); // Vega was removed, so only yours is left: nothing to favour
+  assert.equal(applyCustom(base, [layer({ only: true, names: ['Ripley'] })]).pool.categories[0]!.favoured, undefined);
+});
+
+test('a favoured name is drawn on about half of the draws while one is free', () => {
+  const { pool } = applyCustom(POOL, [layer({ names: ['Ripley', 'Deckard'] })]);
+  let seed = 12345;
+  const rand = () => { seed = (seed * 1664525 + 1013904223) % 2 ** 32; return seed / 2 ** 32; };
+  let mine = 0;
+  for (let i = 0; i < 2000; i++) if (['Ripley', 'Deckard'].includes(drawName(pool, 'code', [], rand))) mine++;
+  assert.ok(mine > 900 && mine < 1200, String(mine)); // half, plus the few times the whole-pool draw lands on one
+  let afterTaken = 0;
+  for (let i = 0; i < 200; i++) if (['Ripley', 'Deckard'].includes(drawName(pool, 'code', ['Ripley', 'Deckard'], rand))) afterTaken++;
+  assert.equal(afterTaken, 0); // both live: the built-in names take over, no duplicates
+});
+
+test('the favoured draw is decided first, then the name', () => {
+  const { pool } = applyCustom(base, [layer({ names: ['Ripley'] })]);
+  const seq = (...v: number[]) => () => v.shift() ?? 0;
+  assert.equal(drawName(pool, 'code', [], seq(0.49, 0)), 'Ripley');
+  assert.equal(drawName(pool, 'code', [], seq(0.5, 0)), 'Hopper');
+});

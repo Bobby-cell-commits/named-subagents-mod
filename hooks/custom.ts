@@ -186,6 +186,7 @@ const findCat = (cats: Category[], key: string) => cats.find(c => lower(c.key) =
  * The pool after each layer in turn. Within a layer: `only` empties what came before, sets
  * are defined (new ones go first; a set's `for` wins for those agent types), flat names join
  * every pool that is not a file-defined set, then `rename` and then `remove` apply to everything.
+ * Names added to a pool that keeps other names are marked `favoured`, so they are drawn often.
  * A result with no names at all falls back to `base`, with a problem saying so.
  */
 export function applyCustom(base: Pool, layers: Layer[]): Applied {
@@ -201,6 +202,7 @@ export function applyCustom(base: Pool, layers: Layer[]): Applied {
       let cat = findCat(cats, key) ?? findCat(fresh, key);
       if (!cat) { cat = { key, subagent_types: [], keywords: [], names: [] }; fresh.push(cat); own.add(lower(key)); }
       if (s.for.length) cat.first = [...new Set([...s.for, ...(cat.first ?? [])])];
+      if (!own.has(lower(cat.key))) cat.favoured = uniq([...(cat.favoured ?? []), ...s.names]); // added to a built-in pool
       cat.names = uniq([...(s.replace ? [] : cat.names), ...s.names]);
       cat.subagent_types = [...new Set([...s.for, ...cat.subagent_types])];
       cat.keywords = [...new Set([...s.keywords, ...cat.keywords])];
@@ -213,18 +215,23 @@ export function applyCustom(base: Pool, layers: Layer[]): Applied {
         if (!d) { d = { key: FALLBACK, subagent_types: [], keywords: [], names: [] }; cats.push(d); }
         targets = [d];
       }
-      for (const t of targets) t.names = uniq([...t.names, ...c.names]);
+      for (const t of targets) { t.names = uniq([...t.names, ...c.names]); t.favoured = uniq([...(t.favoured ?? []), ...c.names]); }
     }
     const renames = Object.entries(c.rename);
     if (renames.length) {
       const to = new Map(renames.map(([f, t]) => [lower(f), t]));
-      for (const k of cats) k.names = uniq(k.names.map(n => to.get(lower(n)) ?? n));
+      for (const k of cats) { k.names = uniq(k.names.map(n => to.get(lower(n)) ?? n)); if (k.favoured) k.favoured = uniq(k.favoured.map(n => to.get(lower(n)) ?? n)); }
     }
     if (c.remove.length) { // after rename, so a name can be hidden by what it is called now
       const gone = new Set(c.remove.map(lower));
       for (const k of cats) k.names = k.names.filter(n => !gone.has(lower(n)));
     }
     if (c.use !== undefined) { use = lower(c.use) === 'auto' ? undefined : c.use; useFrom = label; }
+  }
+  for (const k of cats) { // favoured: the added names still in the pool, and only where the pool holds others too
+    const has = new Set(k.names.map(lower));
+    const kept = (k.favoured ?? []).filter(n => has.has(lower(n)));
+    if (kept.length && kept.length < k.names.length) k.favoured = kept; else delete k.favoured;
   }
   if (!cats.some(k => k.names.length)) {
     problems.push('no names are left after your changes; using the built-in names');
@@ -289,6 +296,7 @@ export function editCustom(before: Custom, verb: string, argv: string[], builtin
     c.names = uniq([...c.names, ...names]);
     c.remove = c.remove.filter(r => !names.some(n => lower(n) === lower(r)));
     lines.push(added.length ? `Added ${added.join(', ')}.` : 'Already there.');
+    if (!c.only) lines.push('Your names get about half of the draws while one is free; /names only on leaves the built-in names out.');
   } else if (verb === 'remove') {
     const names = cleanAll(argv, lines);
     if (!names.length) return same([...lines, 'Usage: /names remove Sisyphus']);

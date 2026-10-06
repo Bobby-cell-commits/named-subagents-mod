@@ -35,7 +35,8 @@ Three ways in, all feeding the same pool. Use whichever is nearest to hand.
 
 **1. The options screen** (at install, or later with `/plugin configure named-subagents-mod` or
 `/config`). Type names into *Your names*, separated by commas: `Ripley, Deckard, Mary Shelley`. They join
-every built-in pool. Turn on *Use only my names* to leave the built-in names out.
+every built-in pool and get about half of the draws while one of them is free, so even two names show up
+often. Turn on *Use only my names* to leave the built-in names out.
 
 **2. The `/names` command**, in any session. It keeps your names in one file and applies to the next
 agent dispatched:
@@ -72,7 +73,7 @@ layered on top of yours. Every key is optional:
 ```
 | Key | Meaning |
 |---|---|
-| `names` | Extra names. They join every built-in pool, not the sets you define. |
+| `names` | Extra names. They join every built-in pool, not the sets you define, and get about half of the draws while one of them is free (so do names a set adds to a built-in pool). |
 | `rename` | Old name to new name. |
 | `remove` | Names never drawn. Applied after `rename`, so a renamed name is hidden by its new name. |
 | `sets` | A set is a pool of your own. `for` lists the agent types that draw from it and wins unless one pool is pinned (`use`, or the *Name pool* option); `keywords` match the task description. A set named like a built-in pool (`code`, `explore`, …) adds to that pool, or with `"replace": true` takes its place. `"pirates": ["Kidd", "Bonny"]` is short for a set with just names. |
@@ -131,8 +132,8 @@ full, because rewriting it would drop the unread part; `/names reset` starts cle
 ## Checks
 ```bash
 node scripts/gen_pool.mjs --check   # pool matches the registry
-node --test spec/*.spec.ts          # draw and custom-names logic, plain node 22.18+ (57 tests)
-claude plugin test .                # hooks against the engine's test kit (33 tests)
+node --test spec/*.spec.ts          # draw and custom-names logic, plain node 22.18+ (60 tests)
+claude plugin test .                # hooks against the engine's test kit (34 tests)
 claude plugin validate .
 ```
 CI runs the two node checks; the two `claude` checks need a local Claude Code.

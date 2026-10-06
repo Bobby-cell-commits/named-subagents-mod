@@ -371,5 +371,13 @@ test('/names lists a long set in part, with a count', async ($, on) => {
   expect(listed.text!.length < 4000).toBe(true);
 });
 
+test('a name you add shows up often, not once in thirty-odd draws', { options: { names: 'Ripley' } }, async ($, on) => {
+  const w: World = { list: [], names: [], toasts: [] };
+  engine($, on, w);
+  for (let i = 0; i < 40; i++) { w.list = []; await call($, 'say ok'); } // nobody live, so Ripley is always free
+  const mine = w.names.filter(n => n === 'Ripley').length;
+  expect(mine >= 8).toBe(true); // about 20 expected; about 1 without favouring
+});
+
 import { POOL as _POOL } from '../hooks/pool.ts';
 async function import_pool() { return { POOL: _POOL }; }

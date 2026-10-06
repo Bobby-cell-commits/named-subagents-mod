@@ -1,0 +1,7 @@
+{"ts":"2026-10-06T18:02:12.610Z","hook":"session.start","version":{"version":"2.1.291","base":"2.1.291","builtAt":"2026-10-06T02:24:19Z"}}
+{"ts":"2026-10-06T18:02:16.670Z","hook":"agent.spawn","tool_use_id":"toolu_015U98tCaNTJMj8aurFTp2Ny","spawnName":"Ripley","agentId":"a789815405458e861","listName":"Ripley","type":"general-purpose","description":"Background agent 1"}
+{"ts":"2026-10-06T18:02:17.307Z","hook":"agent.spawn","tool_use_id":"toolu_01G12955BcZir1zosZuwp9Qa","spawnName":"Guido","agentId":"a40857770316c449c","listName":"Guido","type":"general-purpose","description":"Background agent 2"}
+{"ts":"2026-10-06T18:02:17.783Z","hook":"turn.complete","agentId":"a789815405458e861","listName":"Ripley","status":"idle"}
+{"ts":"2026-10-06T18:02:17.987Z","hook":"agent.spawn","tool_use_id":"toolu_01Tr21pfxeSz3XoYCHd3ByEf","spawnName":"Deckard","agentId":"aa84a4a38b3c5e73e","listName":"Deckard","type":"general-purpose","description":"Background agent 3"}
+{"ts":"2026-10-06T18:02:18.303Z","hook":"turn.complete","agentId":"a40857770316c449c","listName":"Guido","status":"idle"}
+{"ts":"2026-10-06T18:02:18.983Z","hook":"turn.complete","agentId":"aa84a4a38b3c5e73e","listName":"Deckard","status":"idle"}

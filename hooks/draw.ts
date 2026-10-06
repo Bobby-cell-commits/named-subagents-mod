@@ -7,6 +7,8 @@ export type Category = {
   names: string[];
   /** Agent types the user's names file routes here (`for`): they win before keywords are read. */
   first?: string[];
+  /** Names the user added to this pool, when it also holds others: they get FAVOUR of the draws. */
+  favoured?: string[];
 };
 export type Pool = { categories: Category[] };
 
@@ -15,6 +17,11 @@ export const GENERIC_ROLES = ['general-purpose', 'worker'];
 /** What the Agent tool runs when `subagent_type` is omitted. */
 const DEFAULT_ROLE = 'general-purpose';
 const FALLBACK = 'default';
+/**
+ * The share of draws that go to the user's added names while one is free. Without it, two
+ * added names in a pool of thirty-odd would name about one agent in eighteen.
+ */
+export const FAVOUR = 0.5;
 
 function byType(pool: Pool, role: string): string | undefined {
   const r = role.trim().toLowerCase();
@@ -51,13 +58,16 @@ export function categoryFor(pool: Pool, subagentType?: string, description?: str
 }
 
 /**
- * A name from `category` not in `taken` (case-insensitive). An exhausted category spills
- * to the default pool, then to any free name; with all taken, a numbered suffix.
+ * A name from `category` not in `taken` (case-insensitive). The pool's favoured names get
+ * FAVOUR of the draws while one is free. An exhausted category spills to the default pool,
+ * then to any free name; with all taken, a numbered suffix.
  */
 export function drawName(pool: Pool, category: string, taken: Iterable<string>, rand: () => number): string {
   const used = new Set([...taken].map(n => n.toLowerCase()));
   const free = (names: string[]) => names.filter(n => !used.has(n.toLowerCase()));
   const home = pool.categories.find(c => c.key === category) ?? pool.categories.find(c => c.key === FALLBACK);
+  const mine = free(home?.favoured ?? []);
+  if (mine.length && rand() < FAVOUR) return mine[Math.min(mine.length - 1, Math.floor(rand() * mine.length))]!;
   const tiers = [home?.names ?? [], pool.categories.find(c => c.key === FALLBACK)?.names ?? [], pool.categories.flatMap(c => c.names)];
   for (const tier of tiers) {
     const f = free(tier);

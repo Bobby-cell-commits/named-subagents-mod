@@ -24,7 +24,7 @@
     "names": {
       "type": "string",
       "title": "Your names",
-      "description": "Extra names for your agents, separated by commas: Ripley, Deckard. Letters, digits, _ and - only. /names adds more later.",
+      "description": "Extra names for your agents, separated by commas: Ripley, Deckard. They get about half of the draws. Letters, digits, _ and - only. /names adds more later.",
       "default": ""
     },
     "only_custom": {

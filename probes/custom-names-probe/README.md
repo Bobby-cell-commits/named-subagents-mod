@@ -22,6 +22,7 @@ Three probes that fixed the design of custom names, and the live proof of the re
 | `/names add Neo` on a user file with an unknown key; `/names reset` twice | The file was left alone and the unknown key named; the first reset kept the file as `.bak`, the second said there was nothing to reset and left the `.bak` as it was | terminal output (not kept) |
 
 | Hostile project file: escape sequences (`ESC ] 0 ; … BEL`, `ESC [ 31 m`) in a key, in two names and in `use`, beside two good names | Only the good names are drawn (Ripley, Neo, then Ripley-2); the two names holding escape sequences are skipped; no escape byte in the toast, the status line or `/names` output (they show `?` instead). A 300 KB project file is not read, and `/names` says so. | `evidence/proof-hostile.markers.jsonl` |
+| Project file `{ "names": [Ripley, Deckard] }` beside the 395 built-in names, 3 same-type agents, two runs | Ripley, Deckard, Iktomi; then Ripley, Guido, Deckard. Added names get about half of the draws while one is free; before that rule, two names in a pool of 35 named about one agent in eighteen. | `evidence/proof-favour-1.markers.jsonl`, `evidence/proof-favour-2.markers.jsonl` |
 
 An independent review of the first version found 11 defects (none let an invalid name reach the Agent
 tool; four let `/names` drop data from a hand-edited file). Each has a regression test that was seen
