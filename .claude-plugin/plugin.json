@@ -1,12 +1,13 @@
 {
   "name": "named-subagents-mod",
-  "version": "0.2.0",
-  "description": "Gives every subagent a themed name in the task tree (display only; the agent is not told its name).",
+  "version": "0.3.0",
+  "description": "Gives every subagent a themed name in the task tree, and lists the running agents under those names in a side pane: what each is doing, its tokens, its conversation a press away.",
   "author": { "name": "Bobby-cell-commits" },
   "homepage": "https://github.com/Bobby-cell-commits/named-subagents-mod",
   "repository": "https://github.com/Bobby-cell-commits/named-subagents-mod",
   "license": "MIT",
-  "keywords": ["subagents", "names", "fan-out", "mod"],
+  "keywords": ["subagents", "names", "fan-out", "pane", "mod"],
+  "types": "./types/index.d.ts",
   "userConfig": {
     "theme": {
       "type": "string",
@@ -32,6 +33,42 @@
       "title": "Use only my names",
       "description": "Leave out the built-in names and draw only from the ones you add.",
       "default": false
+    },
+    "autoOpen": {
+      "type": "boolean",
+      "title": "Pane: open by itself",
+      "description": "Open the agents pane when an agent starts. Off, /agentpane opens it.",
+      "default": true
+    },
+    "foldAfter": {
+      "type": "number",
+      "title": "Pane: fold after (seconds)",
+      "description": "Fold the pane this many seconds after the last agent finishes; 0 keeps it open.",
+      "default": 10
+    },
+    "motion": {
+      "type": "boolean",
+      "title": "Pane: motion",
+      "description": "Animate the spinner on running agents.",
+      "default": true
+    },
+    "toasts": {
+      "type": "boolean",
+      "title": "Pane: finish toasts",
+      "description": "A toast when agents finish.",
+      "default": true
+    },
+    "keepFinished": {
+      "type": "number",
+      "title": "Pane: finished agents listed",
+      "description": "How many finished agents the list keeps (1-30).",
+      "default": 8
+    },
+    "statusLine": {
+      "type": "boolean",
+      "title": "Pane: status line",
+      "description": "Count the running agents under the prompt while the pane is not on screen.",
+      "default": true
     }
   }
 }

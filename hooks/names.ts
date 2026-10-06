@@ -8,17 +8,23 @@
 //                   on the new id; anything else raises a toast.
 // command.run       /names shows and edits the user's names file.
 //
+// A plugin hooks an event once (without a matcher), and the pane hooks session.start and
+// agent.spawn too. So those two hooks are in pane.tsx, and this file's part of each is a
+// function the pane's hook calls: NAMES_COMMAND and checkSpawn. `$` does not cross a file,
+// so checkSpawn is handed what it may do with the engine (`Say`, and the list read).
+//
 // The pool is the built-in one with the user's changes layered on: the names file in the
 // config directory, then the project's, then the install screen's `names` list. Both files
 // are checked on every dispatch (exists, then stat), so an edit applies to the next agent.
 
-import type { Register, EngineInterface, PluginOptions } from 'claude-code';
+import type { AgentInfo, Register, EngineInterface, PluginOptions } from 'claude-code';
 import { pickName, type Pool } from './draw.ts';
 import { POOL } from './pool.ts';
 import {
   LIMITS, NAME_RE, USAGE, applyCustom, editCustom, emptyCustom, mergeCustom, parseCustom, parseImport, printable,
   readCustom, serializeCustom, tokenize, type Custom, type Layer, type Parsed,
 } from './custom.ts';
+import { withAlarm } from './status.ts';
 
 const TAG = 'named-subagents';
 const FILE = 'named-subagents.json';
@@ -35,12 +41,20 @@ function rand(): number {
   return (a[0] ?? 0) / 2 ** 32;
 }
 
-function alarm($: EngineInterface, text: string): void {
+/** What an alarm does with the engine: a toast, and the plugin's status line. */
+export type Say = { toast: (line: string) => unknown; status: (line: string | undefined) => unknown };
+
+/** Raises an alarm through `say`: for the hooks in pane.tsx, which cannot pass `$` here. */
+export function raise(say: Say, text: string): void {
   // Toast plus status line: the toast fades, the status line stays until the next clean spawn.
   const one = printable(text).replace(/\s+/g, ' '); // may quote a names file: one printable line
   const line = `${TAG}: ${one.length > 240 ? `${one.slice(0, 240)}…` : one}`;
-  void Promise.resolve($.ui.toast(line, { timeoutMs: 10000 })).catch(() => undefined); // audit-allow: fail-loud — the alarm itself has nowhere louder to report
-  void Promise.resolve($.ui.status(line)).catch(() => undefined); // audit-allow: fail-loud — same
+  void Promise.resolve(say.toast(line)).catch(() => undefined); // audit-allow: fail-loud — the alarm itself has nowhere louder to report
+  void Promise.resolve(say.status(withAlarm(line))).catch(() => undefined); // audit-allow: fail-loud — same
+}
+
+function alarm($: EngineInterface, text: string): void {
+  raise({ toast: line => $.ui.toast(line, { timeoutMs: 10000 }), status: line => $.ui.status(line) }, text);
 }
 
 type Paths = { user?: string; project?: string };
@@ -224,17 +238,38 @@ async function names($: EngineInterface, args: string, options: PluginOptions, t
   return [...lines, `${count(after.pool)} names in ${after.pool.categories.length} pools now. Saved to ${at.user}.`, ...after.problems].join('\n');
 }
 
-export const register: Register = (on, options) => {
-  if (options.enabled === false) return;
-  const theme = typeof options.theme === 'string' ? options.theme : 'auto';
+/** Whether naming is on (the `enabled` option). Off, this file hooks nothing and /names is not offered. */
+export const namingOn = (options: PluginOptions) => options.enabled !== false;
 
-  on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'names', description: 'Show or change the names your subagents get', argumentHint: '[add|remove|rename|set|unset|use|only|import|reset]' });
-    return next(e);
-  }).catch(($, e, next) => {
-    alarm($, 'could not register /names');
-    return next(e); // replays the settled start if next already ran
-  });
+/** /names, registered by the pane's session.start hook. */
+export const NAMES_COMMAND = { name: 'names', description: 'Show or change the names your subagents get', argumentHint: '[add|remove|rename|set|unset|use|only|import|reset]' };
+
+/**
+ * agent.spawn's check, called by the pane's hook once the spawn has answered: the name drawn
+ * for this tool call reached the spawn, and the engine's list shows it on the new id.
+ * Anything else is alarmed; a clean spawn clears the last alarm. Never throws.
+ */
+export async function checkSpawn(
+  say: Say, list: () => PromiseLike<readonly AgentInfo[]>, e: { tool_use_id: string; name?: string }, agentId: string | undefined,
+): Promise<void> {
+  const want = drawn.get(e.tool_use_id);
+  if (want === undefined || agentId === undefined) return; // not ours, or not started
+  try {
+    if (e.name !== want) {
+      raise(say, `drew ${want} but the spawn got ${e.name ?? 'no name'}`);
+    } else {
+      const row = (await list()).find(a => a.id === agentId);
+      if (row?.name !== want) raise(say, `drew ${want} but the agent list shows ${row?.name ?? (row ? 'no name' : 'no row')}`);
+      else if (!loaded?.problems.length) void Promise.resolve(say.status(withAlarm(undefined))).catch(() => undefined); // audit-allow: fail-loud — clearing a stale alarm line
+    }
+  } catch {
+    raise(say, `could not verify ${want}`);
+  }
+}
+
+export const register: Register = (on, options) => {
+  if (!namingOn(options)) return;
+  const theme = typeof options.theme === 'string' ? options.theme : 'auto';
 
   on('command.run', { command: 'names' }, async ($, e) => {
     try {
@@ -265,25 +300,9 @@ export const register: Register = (on, options) => {
       drawn.delete(e.tool_use_id);
     }
   }).catch(($, e, next) => {
-    alarm($, 'naming failed; this agent runs unnamed');
+    // Once next was called the name is on the call: what failed is beneath this hook (the
+    // pane's tool.call hook, another plugin, the Agent tool), and is not naming's to report.
+    if (!next.called) alarm($, 'naming failed; this agent runs unnamed');
     return next(e); // replays the settled call if next already ran; never blocks the dispatch
   });
-
-  on('agent.spawn', async ($, e, next) => {
-    const r = await next(e);
-    const want = drawn.get(e.tool_use_id);
-    if (want === undefined || r.agentId === undefined) return r; // not ours, or not started
-    try {
-      if (e.name !== want) {
-        alarm($, `drew ${want} but the spawn got ${e.name ?? 'no name'}`);
-      } else {
-        const row = (await $.agent.list()).find(a => a.id === r.agentId);
-        if (row?.name !== want) alarm($, `drew ${want} but the agent list shows ${row?.name ?? (row ? 'no name' : 'no row')}`);
-        else if (!loaded?.problems.length) void Promise.resolve($.ui.status(undefined)).catch(() => undefined); // audit-allow: fail-loud — clearing a stale alarm line
-      }
-    } catch {
-      alarm($, `could not verify ${want}`);
-    }
-    return r;
-  }).catch(($, e, next) => next(e)); // replays the spawn if it already ran; never refuses one
 };

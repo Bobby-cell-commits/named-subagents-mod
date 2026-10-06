@@ -2,5 +2,5 @@
   "name": "named-subagents-mod",
   "description": "The named-subagents-mod Claude Code mod.",
   "owner": { "name": "Bobby-cell-commits" },
-  "plugins": [{ "name": "named-subagents-mod", "source": "./", "description": "Gives every subagent a themed name in the task tree." }]
+  "plugins": [{ "name": "named-subagents-mod", "source": "./", "description": "Gives every subagent a themed name in the task tree, and lists the running agents under those names in a side pane." }]
 }
