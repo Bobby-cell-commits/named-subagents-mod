@@ -1,0 +1,8 @@
+  │ ⌕ named-sub                                                                                                                                    │
+  ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+  ❯ Name pool · named-subagents-mod          auto ›
+    Name subagents · named-subagents-mod     true
+    Your names · named-subagents-mod         ›
+    Use only my names · named-subagents-mod  false
+  Type to filter · Enter/↓ to select · ↑ to tabs · Esc to clear
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── named subagents package ─

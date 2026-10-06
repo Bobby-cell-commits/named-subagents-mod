@@ -5,6 +5,8 @@ export type Category = {
   subagent_types: string[];
   keywords: string[];
   names: string[];
+  /** Agent types the user's names file routes here (`for`): they win before keywords are read. */
+  first?: string[];
 };
 export type Pool = { categories: Category[] };
 
@@ -31,13 +33,17 @@ function byKeyword(pool: Pool, text: string): string | undefined {
 }
 
 /**
- * Category for one dispatch: a valid `theme` pins it; otherwise a specific role wins,
- * a generic role defers to description keywords, and the default pool catches the rest.
+ * Category for one dispatch: a valid `theme` pins it; then a user's set naming this role;
+ * otherwise a specific role wins, a generic role defers to description keywords, and the
+ * default pool catches the rest.
  * Mirrors the retired Python package's resolve_for_hook (named-subagents 0.7.2).
  */
 export function categoryFor(pool: Pool, subagentType?: string, description?: string, theme = 'auto'): string {
   if (theme !== 'auto' && pool.categories.some(c => c.key === theme)) return theme;
   const role = subagentType ?? DEFAULT_ROLE;
+  const r = role.trim().toLowerCase();
+  const mine = pool.categories.find(c => c.first?.some(t => t.toLowerCase() === r));
+  if (mine) return mine.key; // the user said which agents this pool is for
   const fromType = byType(pool, role);
   const fromTask = description ? byKeyword(pool, description) : undefined;
   if (GENERIC_ROLES.includes(role.trim().toLowerCase())) return fromTask ?? fromType ?? FALLBACK;
@@ -58,7 +64,7 @@ export function drawName(pool: Pool, category: string, taken: Iterable<string>, 
     const pick = f[Math.min(f.length - 1, Math.floor(rand() * f.length))];
     if (pick !== undefined) return pick;
   }
-  const base = home?.names[0] ?? 'Agent';
+  const base = home?.names[0] ?? pool.categories.find(c => c.names.length)?.names[0] ?? 'Agent';
   for (let n = 2; ; n++) if (!used.has(`${base}-${n}`.toLowerCase())) return `${base}-${n}`;
 }
 

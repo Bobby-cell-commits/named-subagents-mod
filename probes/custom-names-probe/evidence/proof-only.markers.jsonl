@@ -1,0 +1,7 @@
+{"ts":"2026-10-06T17:41:51.555Z","hook":"session.start","version":{"version":"2.1.291","base":"2.1.291","builtAt":"2026-10-06T02:24:19Z"}}
+{"ts":"2026-10-06T17:41:55.855Z","hook":"agent.spawn","tool_use_id":"toolu_017qdKmwGcWSSEhJ2h8HkrG1","spawnName":"Trinity","agentId":"a757441d2620c2f0f","listName":"Trinity","type":"general-purpose","description":"Agent 1 reply test"}
+{"ts":"2026-10-06T17:41:56.512Z","hook":"agent.spawn","tool_use_id":"toolu_0177VvBfyoAKj3oYyer4sfVQ","spawnName":"Ripley","agentId":"a11e6a22055c40f03","listName":"Ripley","type":"general-purpose","description":"Agent 2 reply test"}
+{"ts":"2026-10-06T17:41:57.064Z","hook":"turn.complete","agentId":"a757441d2620c2f0f","listName":"Trinity","status":"idle"}
+{"ts":"2026-10-06T17:41:57.172Z","hook":"agent.spawn","tool_use_id":"toolu_01RA8fJuRAApZj9KbeLLWRn4","spawnName":"Deckard","agentId":"ab3f55babf7b8470e","listName":"Deckard","type":"general-purpose","description":"Agent 3 reply test"}
+{"ts":"2026-10-06T17:41:57.687Z","hook":"turn.complete","agentId":"a11e6a22055c40f03","listName":"Ripley","status":"idle"}
+{"ts":"2026-10-06T17:41:58.044Z","hook":"turn.complete","agentId":"ab3f55babf7b8470e","listName":"Deckard","status":"idle"}

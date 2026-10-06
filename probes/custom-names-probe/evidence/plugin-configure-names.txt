@@ -1,0 +1,10 @@
+  ────
+    Configure named-subagents-mod
+    Plugin options
+      Name pool          auto
+      Name subagents     true
+    ❯ Your names         Ripley, Mary Shelley
+      Use only my names  false
+      Save configuration
+    Extra names for your agents, separated by commas: Ripley, Deckard. Letters, digits, _ and - only. /names adds more later.
+    ↑/↓ to move · Enter to continue · Esc to cancel

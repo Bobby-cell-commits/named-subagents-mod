@@ -1,0 +1,4 @@
+markers.jsonl
+debug*.log
+run*.out
+.claude-plugin/types/

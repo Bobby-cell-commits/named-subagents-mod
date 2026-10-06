@@ -1,0 +1,9 @@
+{
+  "sets": {
+    "pirates": {
+      "names": ["Blackbeard", "Bonny", "Kidd", "Morgan", "Teach", "Rackham", "Read", "Drake"],
+      "for": ["Explore"],
+      "keywords": ["search", "find", "hunt"]
+    }
+  }
+}

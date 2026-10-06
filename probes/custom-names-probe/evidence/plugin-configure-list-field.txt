@@ -1,0 +1,50 @@
+claude --model haiku --setting-sources project,local --plugin-dir /home/bogdan/Dev/named-subagents-mod-dev/probes/custom-names-probe/probe
+bogdan@bogdan-System-Product-Name:~/.claude/jobs/f12b1204/tmp/tui/work$ claude --model haiku --setting-sources project,local --plugin-dir /home/bogdan
+/Dev/named-subagents-mod-dev/probes/custom-names-probe/probe
+ ▐▛███▛█   Claude Code v2.1.291
+▝▜██████▀  Haiku 4.5 · Claude Max
+ ▝▝   ▝▝   ~/.claude/jobs/f12b1204/tmp/tui/work
+
+
+❯ /config
+  ⎿  Config dialog dismissed
+
+❯ /plugin configure names-probe
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── named subagents package ─
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Plugins  Discover   Installed   Marketplaces   Errors   Stats
+
+  1 mod active · names-probe
+
+
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ────
+    Configure names-probe
+    Plugin options
+
+    ❯ List   Ripley, Mary Shelley
+      File
+      Plain
+
+      Save configuration
+
+    a list-valued option
+
+    ↑/↓ to move · Enter to continue · Esc to cancel
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

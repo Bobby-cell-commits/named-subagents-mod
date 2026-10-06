@@ -1,6 +1,6 @@
 {
   "name": "named-subagents-mod",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Gives every subagent a themed name in the task tree (display only; the agent is not told its name).",
   "author": { "name": "Bobby-cell-commits" },
   "homepage": "https://github.com/Bobby-cell-commits/named-subagents-mod",
@@ -20,6 +20,18 @@
       "title": "Name subagents",
       "description": "Turn naming off without uninstalling.",
       "default": true
+    },
+    "names": {
+      "type": "string",
+      "title": "Your names",
+      "description": "Extra names for your agents, separated by commas: Ripley, Deckard. Letters, digits, _ and - only. /names adds more later.",
+      "default": ""
+    },
+    "only_custom": {
+      "type": "boolean",
+      "title": "Use only my names",
+      "description": "Leave out the built-in names and draw only from the ones you add.",
+      "default": false
     }
   }
 }

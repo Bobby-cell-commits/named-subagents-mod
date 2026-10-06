@@ -1,0 +1,7 @@
+{"ts":"2026-10-06T17:42:07.909Z","hook":"session.start","version":{"version":"2.1.291","base":"2.1.291","builtAt":"2026-10-06T02:24:19Z"}}
+{"ts":"2026-10-06T17:42:12.349Z","hook":"agent.spawn","tool_use_id":"toolu_01EY9vJEJqFa9UT9M8NAajYN","spawnName":"aB","agentId":"a768d12c302c1000f","listName":"aB","type":"general-purpose","description":"Agent 1 test"}
+{"ts":"2026-10-06T17:42:12.838Z","hook":"agent.spawn","tool_use_id":"toolu_01WMPHPfs32tW2LeStWDhvyr","spawnName":"Zoe","agentId":"afaa6b98dde9bc481","listName":"Zoe","type":"general-purpose","description":"Agent 2 test"}
+{"ts":"2026-10-06T17:42:13.339Z","hook":"agent.spawn","tool_use_id":"toolu_01Dy4uZAfK9DLPbwhTGjcVWJ","spawnName":"MaryShelley","agentId":"a94a7c7f2ee221372","listName":"MaryShelley","type":"general-purpose","description":"Agent 3 test"}
+{"ts":"2026-10-06T17:42:13.448Z","hook":"turn.complete","agentId":"a768d12c302c1000f","listName":"aB","status":"idle"}
+{"ts":"2026-10-06T17:42:13.773Z","hook":"turn.complete","agentId":"afaa6b98dde9bc481","listName":"Zoe","status":"idle"}
+{"ts":"2026-10-06T17:42:14.317Z","hook":"turn.complete","agentId":"a94a7c7f2ee221372","listName":"MaryShelley","status":"idle"}

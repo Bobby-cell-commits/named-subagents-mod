@@ -1,0 +1,11 @@
+{
+  "name": "names-probe",
+  "version": "0.0.1",
+  "description": "Probe-only: which Agent names the engine accepts, what $.fs may read and write under the config directory, and what list and file options hold.",
+  "author": { "name": "Bobby-cell-commits" },
+  "userConfig": {
+    "list": { "type": "string", "multiple": true, "title": "List", "description": "a list-valued option" },
+    "path": { "type": "file", "title": "File", "description": "a file-valued option" },
+    "plain": { "type": "string", "title": "Plain", "description": "a plain string", "default": "" }
+  }
+}

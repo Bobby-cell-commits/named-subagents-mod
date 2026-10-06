@@ -1,0 +1,7 @@
+{"ts":"2026-10-06T17:42:18.145Z","hook":"session.start","version":{"version":"2.1.291","base":"2.1.291","builtAt":"2026-10-06T02:24:19Z"}}
+{"ts":"2026-10-06T17:42:21.932Z","hook":"agent.spawn","tool_use_id":"toolu_01C9JWtdSJsSf6hvT3YuWbJA","spawnName":"MaryShelley","agentId":"ad01cf39332e7e003","listName":"MaryShelley","type":"general-purpose","description":"Agent 1 test"}
+{"ts":"2026-10-06T17:42:22.439Z","hook":"agent.spawn","tool_use_id":"toolu_0189L1DgvizBMDhhDD9rnSzg","spawnName":"Ripley","agentId":"acc82c8b207ddc81e","listName":"Ripley","type":"general-purpose","description":"Agent 2 test"}
+{"ts":"2026-10-06T17:42:22.847Z","hook":"turn.complete","agentId":"ad01cf39332e7e003","listName":"MaryShelley","status":"idle"}
+{"ts":"2026-10-06T17:42:22.934Z","hook":"agent.spawn","tool_use_id":"toolu_01SRpPKsM9pf9qHEzfJeW7tP","spawnName":"Ripley-2","agentId":"abdedac39224643df","listName":"Ripley-2","type":"general-purpose","description":"Agent 3 test"}
+{"ts":"2026-10-06T17:42:23.421Z","hook":"turn.complete","agentId":"acc82c8b207ddc81e","listName":"Ripley","status":"idle"}
+{"ts":"2026-10-06T17:42:23.734Z","hook":"turn.complete","agentId":"abdedac39224643df","listName":"Ripley-2","status":"idle"}
