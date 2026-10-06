@@ -46,10 +46,22 @@ that each read one file, and saves the screen twice a second. The docked run's w
 | `evidence/docked-170col-folded-tab.txt` | Ten seconds later: the pane folded to the `◂ Agents ✓ 3` tab |
 | `evidence/above-prompt-170col-running.txt` | Main screen, 170 columns: the summary above the prompt, Monet, Vermeer, Mucha; the same names in the tree |
 | `evidence/above-prompt-170col-done.txt` | That run finished, the receipt inside the box |
+| `evidence/pane-off-170col-running.txt` | 2026-10-07, the `pane` option off (`EXTRA="--settings <file>"`), fullscreen, 170 columns: no pane, no count, no toast; Matisse, Rothko, Eames in the tree |
 
 Across both recordings, every frame that shows the pane and the tree together (16 docked, 14 above
 the prompt) has each of the tree's names in the pane under the same name. In three frames of each
 the tree has fewer rows: it drops an agent when it finishes and the pane keeps it.
+
+With the pane switched off (71 frames, same prompt): the tree names all three agents and no frame holds
+the pane, its timeline, the count under the prompt, a finish toast or the tab. The same day's run with it
+on: 21 frames show the pane and the tree together, each tree name in the pane under the same name.
+
+A session keeps a command its plugin no longer registers (2026-10-07, a scratch plugin that registers
+`/probecmd` only while a flag file exists: flag removed, `/reload-plugins`, and `/probecmd` was still in
+the typeahead). So after the `pane` option is turned off mid-session `/roster` is still offered, and the
+mod answers it with "The agents pane is switched off". Not tried live: the flip itself in `/config` (it
+would have written the option into the user's own settings); `/reload-plugins` did not pick up a changed
+`--settings` file.
 
 The frames are plain text (`tmux capture-pane -p`), with the shell line removed and the scratch
 folder's path written `~/scratch`.

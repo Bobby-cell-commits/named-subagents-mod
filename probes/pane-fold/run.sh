@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # run.sh <workdir> <outdir> <cols> <rows>: drive Claude Code with only the worktree's mod loaded and save the screen twice a second.
+# EXTRA holds more flags for claude: the mod's options go in as `--settings <file>` holding { "pluginConfigs": { "named-subagents-mod": { "options": {…} } } }.
 set -uo pipefail
 DIR=$1; OUT=$2; COLS=$3; ROWS=$4
 MOD=$(cd "$(dirname "$0")/../.." && pwd)
@@ -7,7 +8,7 @@ T="tmux -L nsfold -f /dev/null"
 trap '$T kill-server 2>/dev/null' EXIT
 $T kill-server 2>/dev/null
 $T new-session -d -s d -x "$COLS" -y "$ROWS" -c "$DIR"; $T set -s focus-events on
-$T send-keys -t d "claude --model haiku --setting-sources project,local --plugin-dir $MOD" Enter
+$T send-keys -t d "claude --model haiku --setting-sources project,local --plugin-dir $MOD ${EXTRA:-}" Enter
 sleep 9
 if $T capture-pane -p -t d | grep -qi "trust this folder"; then $T send-keys -t d Down; sleep 0.5; $T send-keys -t d Enter; sleep 7; fi
 $T capture-pane -p -t d | grep -q "Claude Code v" || { echo "Claude Code did not start; nothing was typed" >&2; $T capture-pane -p -t d | tail -20 >&2; exit 1; }
