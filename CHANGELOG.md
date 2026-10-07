@@ -30,6 +30,8 @@ One install now gives the names and a pane that lists the agents under them.
   toasts, no once-a-second read of the agent list and no `/roster`. Naming, `/names` and the check of
   each spawned agent's name are unchanged. Turned off mid-session, an open pane is closed, its count
   cleared and its list forgotten, and a `/roster` the session still offers says the pane is off.
+- The README says where options are set (`/config` by title, the settings key by plugin id) and that a
+  project's local settings file did not carry them.
 - Six options that adjust the pane while it is on: `autoOpen`, `foldAfter`, `motion`, `toasts`,
   `keepFinished`, `statusLine`.
 - `tests/together.test.tsx`: an agent the mod names is listed in the pane under that name; both

@@ -179,6 +179,12 @@ into this mod with a name column, the roster layout and a few wording changes. S
   failed" alarm is raised only when the name did not reach the call.
 
 ## Options (`userConfig`)
+Set at install, later with `/plugin configure named-subagents-mod` or `/config` (type the option's title
+to find it; a change applies at once), or in `~/.claude/settings.json` under `pluginConfigs`, keyed by
+the plugin's id: `named-subagents-mod@named-subagents-mod` installed from the marketplace,
+`named-subagents-mod@inline` loaded with `--plugin-dir`. A project's `.claude/settings.local.json` did
+not carry them (Claude Code 2.1.292); `--settings <file>` does.
+
 | Field | Default | Meaning |
 |---|---|---|
 | `theme` | `auto` | `auto`, or a category key (`code`, `explore`, `debug`, …) to always use that pool |
