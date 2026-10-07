@@ -179,9 +179,14 @@ anything is drawn or quoted, every line is cut to length, a names file is bounde
 many names, sets and routes it may hold, and a name must pass the Agent tool's own rule. An agent's
 replies are drawn as Markdown, as Claude Code draws its own transcript, so text an agent read can shape
 what its conversation shows you (a heading, a link, a line that looks like a button); it cannot press
-anything, run anything or reach the network. The pane's buttons are its own elements, not text.
+anything, run anything or reach the network, and a link in a reply is not pressable. The pane's buttons
+are its own elements, not text.
 
-A review of 0.3.0 for exploitable paths found none; its notes are in the changelog.
+To check this without trusting the README, clone the repository and run `claude plugin validate .`: its
+`calls:` line lists every engine method the mod can call. For 0.3.0 that is `$.agent.list`, `$.clock`,
+`$.command.register`, `$.env.get`, `$.fs.{exists,read,stat,write}`, `$.session.{messages,root,surfaces}`,
+`$.state`, `$.tool.call` and `$.ui.*`; no `$.http`, `$.process`, `$.model` or `$.mcp`. A review of 0.3.0
+for exploitable paths found none; its notes are in the changelog.
 
 ## What it does
 - `tool.call{Agent}`: if the call has no `name`, draws one and calls `next({ ...e, name })`. The
@@ -307,8 +312,9 @@ captures).
   draws them); a teammate's `waiting` row.
 - On the options screen a number option (*fold after*, *finished agents listed*) reads blank until you set
   it; the default (10, 8) applies all the same.
-- Mods API is early access; tested on Claude Code 2.1.291 and 2.1.292 only. Both install paths above were
-  tried on 2.1.292 from a clean `CLAUDE_CONFIG_DIR`.
+- The mods API is new (Claude Code 2.1.287, 2026-10-01) and a release may change what this mod relies
+  on; tested on 2.1.291 and 2.1.292 only. Both install paths above were tried on 2.1.292 from a clean
+  `CLAUDE_CONFIG_DIR`.
 
 ## Credits
 The agents pane is [agentpane](https://github.com/xuanji86/claude-agentpane) by Anji Xu, version 1.1.4,
