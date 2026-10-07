@@ -304,6 +304,28 @@ test('invalid JSON is reported without echoing the file', () => {
   assert.deepEqual(p.problems.filter(t => CONTROL.test(t)), []);
 });
 
+test('invalid JSON is reported without quoting the file\'s text', () => {
+  // V8's message quotes the head of what it could not parse. A project's file may be a symlink to
+  // anything, so none of it may reach a toast: "ghp_SECRET" is the kind of head that must not show.
+  for (const text of ['ghp_SECRETTOKEN123', '{ "names": [ghp_SECRETTOKEN', 'AKIA0000000000000000 not json']) {
+    const p = parseCustom(text, 'f');
+    assert.equal(p.problems.length, 1);
+    assert.match(p.problems[0]!, /not valid JSON/);
+    assert.doesNotMatch(p.problems[0]!, /SECRET|AKIA|ghp_/, p.problems[0]);
+  }
+});
+
+test('a set named like an inherited property merges without throwing', () => {
+  // "constructor" passes the name rule; on a plain object it is inherited, not a set the file holds.
+  for (const key of ['constructor', 'toString', 'hasOwnProperty']) {
+    const p = parseImport(JSON.stringify({ sets: { [key]: ['Kidd'] } }), 'f');
+    const merged = mergeCustom(emptyCustom(), p.custom);
+    assert.deepEqual(merged.sets[key]?.names, ['Kidd']);
+    const again = mergeCustom(merged, p.custom);
+    assert.deepEqual(again.sets[key]?.names, ['Kidd']);
+  }
+});
+
 test('`use` must look like a pool name', () => {
   const p = parseCustom(JSON.stringify({ use: 'my pool; rm -rf' }), 'f');
   assert.equal(p.custom.use, undefined);

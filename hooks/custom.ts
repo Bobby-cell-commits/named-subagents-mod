@@ -153,8 +153,10 @@ export function parseCustom(text: string, label: string): Parsed {
   if (text.length > LIMITS.fileChars) return tooLarge(label);
   let value: unknown;
   try { value = JSON.parse(text); } catch (err) {
-    const why = printable(String(err instanceof Error ? err.message : err)).replace(/\s+/g, ' ').slice(0, 80);
-    return { custom: emptyCustom(), problems: [`${printable(label).slice(0, 120)}: not valid JSON (${why})`], cleaned: [] };
+    // The engine's message quotes the head of what it could not parse, and a project's file may be a
+    // symlink to anything: only the position is kept, never the text.
+    const where = /position (\d+)/.exec(String(err instanceof Error ? err.message : err))?.[1];
+    return { custom: emptyCustom(), problems: [`${printable(label).slice(0, 120)}: not valid JSON${where ? ` (at character ${where})` : ''}`], cleaned: [] };
   }
   return readCustom(value, label);
 }
@@ -358,7 +360,7 @@ export function mergeCustom(into: Custom, incoming: Custom): Custom {
   const sets: Record<string, CustomSet> = Object.fromEntries(Object.entries(into.sets).map(([k, s]) => [k, { ...s }]));
   for (const [k, s] of Object.entries(incoming.sets)) {
     const key = Object.keys(sets).find(x => lower(x) === lower(k)) ?? k;
-    const old = sets[key];
+    const old = Object.hasOwn(sets, key) ? sets[key] : undefined; // "constructor" is a set only when the file has it
     sets[key] = old === undefined ? { ...s } : {
       names: uniq([...old.names, ...s.names]), for: [...new Set([...old.for, ...s.for])],
       keywords: [...new Set([...old.keywords, ...s.keywords])], replace: old.replace || s.replace,

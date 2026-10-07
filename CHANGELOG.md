@@ -47,6 +47,19 @@ One install now gives the names and a pane that lists the agents under them.
   drawing from that set. `scripts/capture_demo.sh` records it (150 columns, the fullscreen layout) and
   `scripts/render_tree_gif.py` draws the whole screen, choosing frames by rule so any recording will do.
 
+### Security
+A review of the whole mod for exploitable paths (hostile names file, hostile transcript, `/names import`,
+the Stop consent, every file write) found none. Four of its notes are closed here, each with a test:
+- A names file that is not JSON was reported with the engine's own parse error, which quotes the head
+  of the text; a project's file can be a symlink to anything. The report now gives the position only.
+- A set named `constructor`, `toString` or `hasOwnProperty` (all pass the name rule) made
+  `/names import` fail with "/names failed"; it merges now.
+- A tool's name is cleaned before the pane draws it, as its argument already was.
+- The reason a Stop could not be carried out is cleaned before it is toasted.
+- A test now feeds the pane a hostile transcript (a terminal hyperlink, colour, a bidi override, a
+  100 KB line, a line that reads `■ Stop`) and checks nothing but the words reaches the drawing.
+- README: a section on what the mod reaches and what it trusts.
+
 ### Changed
 - `hooks/hooks.json` names `./index.ts`, which registers naming and then the pane. `session.start` and
   `agent.spawn` are hooked once, in `hooks/pane.tsx`, for both: `/names` is registered there, and

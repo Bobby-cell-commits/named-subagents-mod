@@ -240,7 +240,8 @@ export const toolParts = (tool: string, input: Record<string, unknown>) => {
     : tool === 'Agent' ? s('description')
     : tool === 'Skill' ? s('skill')
     : ''
-  return { name: tool.startsWith('mcp__') ? tool.split('__').slice(1).join(':') : tool, arg: fit(oneLine(relative(arg)), MAX_ARG) }
+  const name = oneLine(tool) // as its argument is: a name is the API's to check, and the pane draws it anyway
+  return { name: name.startsWith('mcp__') ? name.split('__').slice(1).join(':') : name, arg: fit(oneLine(relative(arg)), MAX_ARG) }
 }
 export const describeTool = (tool: string, input: Record<string, unknown>) => {
   const { name, arg } = toolParts(tool, input)
@@ -701,7 +702,7 @@ async function stopAgent($: EngineInterface, a: Agent) {
     .call({ tool: 'TaskStop', task_id: a.id, consent: `The user pressed "Stop" on the ${JSON.stringify(fit(oneLine(a.type), 30))} agent ${fit(a.id, 40)} in the agents pane` } as never)
     .catch((err: unknown) => ({ deny: String(err) }))) as { deny?: string; isError?: boolean; text?: string }
   const why = done.deny || (done.isError ? oneLine(String(done.text ?? '')) || 'the tool reported an error' : '')
-  if (why) $.ui.toast(`Could not stop ${name}: ${fit(why, 120)}`)
+  if (why) $.ui.toast(`Could not stop ${name}: ${fit(oneLine(why), 120)}`)
 }
 
 // The conversation on screen changed: draw it again.

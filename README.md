@@ -157,6 +157,32 @@ model named itself is listed under that name; one with no name (naming turned of
 The pane is [agentpane](https://github.com/xuanji86/claude-agentpane) 1.1.4 by Anji Xu (MIT), brought
 into this mod with a name column, the roster layout and a few wording changes. See [Credits](#credits).
 
+## What it reaches, and what it trusts
+Everything the mod does goes through Claude Code's plugin API; it runs no process and makes no network
+request. What it reads and writes:
+
+- **Reads:** the session's agent list; every `Agent` dispatch (to set its `name`); each agent's tool
+  calls (the tool's name and a short argument), its token usage and the model it runs on; an agent's
+  transcript, only while you have its conversation open in the pane; `HOME`, `USERPROFILE` and
+  `CLAUDE_CONFIG_DIR`; your names file and the project's; and a file you name to `/names import`.
+- **Writes:** your names file (`~/.claude/named-subagents.json`) and its `.bak`, on `/names` edits
+  only. Nothing else, and nothing is kept after the session beyond that file.
+- **One action:** `TaskStop` on the agent whose conversation you have open, after you press *Stop* and
+  then *Confirm stop*. The consent it gives the engine names the agent's type and id, never text a model
+  wrote.
+
+What it draws is not all yours. Agent names and descriptions are written by the model; tool arguments
+and results and the agents' replies come from whatever the agent read, a web page or a repository
+included; and a project's names file arrives with the repository. So all of it is treated as untrusted
+text: control characters, escape sequences and the characters that reorder text are removed before
+anything is drawn or quoted, every line is cut to length, a names file is bounded in size and in how
+many names, sets and routes it may hold, and a name must pass the Agent tool's own rule. An agent's
+replies are drawn as Markdown, as Claude Code draws its own transcript, so text an agent read can shape
+what its conversation shows you (a heading, a link, a line that looks like a button); it cannot press
+anything, run anything or reach the network. The pane's buttons are its own elements, not text.
+
+A review of 0.3.0 for exploitable paths found none; its notes are in the changelog.
+
 ## What it does
 - `tool.call{Agent}`: if the call has no `name`, draws one and calls `next({ ...e, name })`. The
   description is left as is. A model-supplied `name` passes through untouched.
@@ -232,8 +258,8 @@ a command back) and answers that the pane is switched off.
 ## Checks
 ```bash
 node scripts/gen_pool.mjs --check   # pool matches the registry
-node --test spec/*.spec.ts          # draw and custom-names logic, plain node 22.18+ (60 tests)
-claude plugin test .                # hooks against the engine's test kit (148 tests)
+node --test spec/*.spec.ts          # draw and custom-names logic, plain node 22.18+ (62 tests)
+claude plugin test .                # hooks against the engine's test kit (150 tests)
 claude plugin validate .
 ```
 CI runs the two node checks; the two `claude` checks need a local Claude Code.
@@ -279,7 +305,10 @@ captures).
   it: `claude plugin uninstall agentpane@claude-agentpane`.
 - Not tried live: the pane in the desktop app, VS Code and mobile with named agents (the test kit
   draws them); a teammate's `waiting` row.
-- Mods API is early access; tested on Claude Code 2.1.291 and 2.1.292 only.
+- On the options screen a number option (*fold after*, *finished agents listed*) reads blank until you set
+  it; the default (10, 8) applies all the same.
+- Mods API is early access; tested on Claude Code 2.1.291 and 2.1.292 only. Both install paths above were
+  tried on 2.1.292 from a clean `CLAUDE_CONFIG_DIR`.
 
 ## Credits
 The agents pane is [agentpane](https://github.com/xuanji86/claude-agentpane) by Anji Xu, version 1.1.4,

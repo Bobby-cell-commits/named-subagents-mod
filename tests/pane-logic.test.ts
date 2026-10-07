@@ -240,6 +240,27 @@ describe('transcript', () => {
   test('injected reminders, controls and bidi marks are left out', async () => {
     expect(clean('a<system-reminder>secret</system-reminder>b\u001b[31m‮')).toBe('ab[31m')
   })
+  test('a tool\'s name is cleaned as its argument is', async () => {
+    expect(toolParts('Ba\u0007sh\u202e', {}).name).toBe('Bash')
+    expect(toolParts('mcp__x\u0007__y', {}).name).toBe('x:y')
+  })
+  test('a hostile transcript reaches the drawing with no escape, OSC or bidi sequence left', async () => {
+    // What a subagent read from a page or file can land in its reply or a tool result; the pane draws the reply as
+    // Markdown, so only its words may remain: no terminal hyperlink (OSC 8), no colour, no bidi override.
+    const osc = '\u001b]8;;https://evil.example\u0007■ Stop\u001b]8;;\u0007'
+    const msgs = [
+      say('user', `brief ${osc}`),
+      say('assistant', `# owned ${osc}\n\u009b31m‮red\u200b`, [
+        { tool_use_id: '1', tool: 'Bash', input: { command: `echo ${osc}` }, text: `${osc}\n${'x'.repeat(100_000)}\u001b[2J` },
+      ]),
+    ]
+    const blocks = transcriptBlocks(msgs)
+    const drawn = JSON.stringify(blocks)
+    expect(drawn).not.toMatch(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/)
+    expect(drawn).toContain('owned') // the words stay: the pane reports, it does not hide
+    const call = blocks.find(b => b.kind === 'tools')
+    expect(call?.kind === 'tools' && call.calls[0]!.result.every(l => l.length <= 501)).toBe(true)
+  })
   test('a conversation reads as its brief, replies, and each run of tool calls as one group', async () => {
     const msgs = [
       say('user', 'Find every mod example.'),
